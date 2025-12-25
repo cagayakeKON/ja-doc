@@ -1,0 +1,27 @@
+「<ruby>然<rt>な</rt></ruby>ければなりません」也可以<ruby>改<rt>かい</rt></ruby>成「<ruby>然<rt>な</rt></ruby>ければ<ruby>行<rt>い</rt></ruby>けません」「<ruby>無<rt>な</rt></ruby>くては<ruby>無<rt>は</rt></ruby>い<ruby>行<rt>け</rt></ruby>ません」。但<ruby>这<rt>こ</rt></ruby>两种<ruby>说<rt>い</rt></ruby>法<ruby>一<rt>一</rt></ruby>般<ruby>是<rt>は</rt></ruby>向<ruby>対<rt>たい</rt></ruby>方<ruby>提<rt>てい</rt></ruby>出 “<ruby>应<rt>おう</rt></ruby>该…”、“不…不行”。
+*   <ruby>毎<rt>もう</rt></ruby> <ruby>時<rt>じ</rt></ruby> <ruby>間<rt>かん</rt></ruby>はあまり<ruby>多<rt>おお</rt></ruby>くありませんから、<ruby>しっ<rt>しっ</rt></ruby>かり<ruby>勉<rt>べん</rt></ruby> <ruby>強<rt>きょう</rt></ruby>しなければいけません。(时间不多了，(你)应该努力学习才是。)
+
+## 六、･･･を･･･と言います
+
+<ruby>日<rt>に</rt></ruby>本<ruby>語<rt>ご</rt></ruby>ではそれをあいさつの<ruby>言<rt>こと</rt></ruby>葉<rt>ば</rt></ruby>と言います。
+
+<ruby>此<rt>こ</rt></ruby>句<p><ruby>型<rt>けい</rt></ruby></p>的「を」和「といいます」<ruby>前<rt>まえ</rt></ruby>面<ruby>要<rt>よう</rt></ruby>用<ruby>名<rt>めい</rt></ruby>词，<ruby>用<rt>よう</rt></ruby>于<ruby>用<rt>よう</rt></ruby>其<rt>た</rt></ruby>他<ruby>语<rt>ご</rt></ruby>言<rt>げん</rt></ruby>或<rt>と</rt></ruby>说<p><ruby>法<rt>ほう</rt></ruby></p><ruby>改<rt>かい</rt></ruby>换<ruby>某<rt>ある</rt></ruby>个<ruby>词<rt>ことば</rt></ruby>语<rt>の</rt></ruby>说法。
+
+*   <ruby>私<rt>わたし</rt></ruby>たちは<ruby>此<rt>こ</rt></ruby>を<ruby>慣<rt>かん</rt></ruby> <ruby>用<rt>よう</rt></ruby> <ruby>句<rt>く</rt></ruby>と言います。(我们把这叫做惯用句。)
+*   三月三日にする女の子の行事をひな祭りと言います。(我们把三月三日举行的女孩子的活动叫做偶人节。)
+*   日本では、ラジオを聞きながら<ruby>勉<rt>べん</rt></ruby> <rt>きょう</rt></ruby>する<rt>人</rt></ruby>を「<rt>なら</rt>がら<rt>族</rt></ruby>」と<rt>い</rt></ruby>います。(在<ruby>日<rt>に</rt></ruby>本，<rt>ひと</rt></ruby>们把<rt>ほと</rt></ruby>边<rt>き</rt></ruby>听<rt>ちょ</rt></ruby>放<rt>ほう</rt></ruby>边<rt>べん</rt></ruby>做<rt>さ</rt></ruby>业<rt>ぎょう</rt></ruby>的<rt>ひと</rt></ruby>人<rt>と</rt></ruby>叫<rt>よ</rt></ruby>做<rt>や</rt></ruby>惯<rt>かん</rt></ruby>于<rt>じ》</rt></ruby>同<rt>どう</rt></ruby>时<rt>じ</rt></ruby>做<rt>や</rt></ruby>两<rt>ふた</rt></ruby>件<rt>けん</rt></ruby>事<rt>じ》</rt></ruby>的<rt>ひと</rt></ruby>人<rt>の</rt></ruby>。)
+
+## 七、「･･･という」+体言
+
+<ruby>日<rt>に</rt></ruby>本<rt>ほん</rt></ruby>でいちばん<ruby>高<rt>たか</rt></ruby>い<rt>やま</rt></ruby>は<rt>なん</rt></ruby>という<rt>やま</rt></ruby>ですか。
+
+「<rt>と</rt></ruby>う」は<rt>かん</rt></ruby> <rt>じょ</rt></ruby>し「<rt>と</rt></ruby>」と「<rt>い</rt></ruby>う」で<rt>こう</rt></ruby> <rt>せい</rt></ruby>、<rt>しゃ</rt></ruby> <rt>ひ</rt></ruby> <rt>ねん</rt></ruby>。<rt>そう</rt></ruby>「<rt>い</rt></ruby>う」が<rt>じょ</rt></ruby> <rt>し</rt></ruby>「<rt>と</rt></ruby>」の<rt>う</rt></ruby> <rt>めん</rt></ruby>、<rt>う</rt></ruby> <rt>さい</rt></ruby> <rt>げん</rt></ruby> <rt>てき</rt></ruby><rt>い</rt></ruby></rt>、<rt>う</rt></ruby><rt>げん</rt></ruby> $<rt>い</rt></ruby> <rt>み</rt></ruby></rt> <rt>き</rt></ruby></rt> <rt>じ</rt></ruby></rt>、<rt>けい</rt></ruby></rt> <rt>じゅ</rt></ruby></rt> <rt>ぶん</rt></ruby></rt> <rt>しゅう</rt></ruby></rt> <rt>か</rt></ruby></rt> <rt>さ</rt></ruby></rt> <rt>き</rt></ruby></rt>、<rt>う</rt></ruby></rt> <rt>さい</rt></ruby></rt> <rt>き</rt></ruby></rt> <rt>じ</rt></ruby></rt> <rt>かい</rt></ruby></rt> <rt>どう</rt></ruby></rt>。 <rt>とう</rt></ruby></rt> <rt>さい</rt></ruby></rt>「<rt>い</rt></ruby>う」は<rt>ひと</rt></ruby></rt> <rt>かん</rt></ruby></rt> <rt>ま</rt></ruby></rt> <rt>ひ</rt></ruby></rt> <rt>じ</rt></ruby></rt>。 <rt>よ</rt></ruby></rt> <rt>かい</rt></ruby></rt> <rt>けい</rt></ruby></rt> <rt>ひ</rt></ruby></rt> <rt>ひ</rt></ruby></rt> <rt>しゃ</rt></ruby></rt> <rt>う</rt></ruby></rt>、<rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt> <rt>う</rt></ruby></rt>。
+
+*   これはなんという<rt>は</rt></ruby>ですか。(这<rt>は</rt></ruby>叫<rt>な</rt></ruby>什么<rt>か</rt></ruby>呢？)
+*   <ruby>牧<rt>まき</rt></ruby>野<rt>の</rt></ruby>という<rt>ひと</rt></ruby>からあなたに<rt>でんわ</rt></ruby>がありました。(有<rt>ひと</rt></ruby>叫<rt>まき</rt></ruby>野<rt>の</rt></ruby>的<rt>ひと</rt></ruby>给你<rt>でんわ</rt></ruby>了。)
+*   <ruby>南<rt>なん</rt></ruby>京<rt>きん</rt></ruby>路<rt>ろ</rt></ruby>という<rt>えき</rt></ruby>で<rt>バス</rt></ruby>に<rt>の</rt></ruby>ったのです。(是在<rt>ひと</rt></ruby>叫<rt>なん</rt></ruby>京<rt>きん</rt></ruby>路<rt>ろ</rt></ruby>的<rt>えき</rt></ruby>上<rt>うえ</rt></ruby>的<rt>くるま</rt></ruby>。)
+
+「･･･という+体言」还能<ruby>表<rt>ひょう</rt></ruby>示<rt>し</rt></ruby>内<rt>ない</rt></ruby>容<rt>よう</rt></ruby>。
+
+*   <ruby>陳<rt>ちん</rt></ruby>さんは、<ruby>大学<rt>だいがく</rt></ruby>に<rt>ごうかく</rt></ruby>したという<rt>しらせ</rt></ruby>を<rt>う</rt></ruby>け<rt>と</rt></ruby>りました。(小<rt>ちん</rt></ruby>收<rt>う</rt></ruby>到<rt>と</rt></ruby>了<ruby>考<rt>こう</rt></ruby>上<rt>じょう</rt></ruby><ruby>大学<rt>だいがく</rt></ruby>的<rt>つう</rt></ruby>知<rt>ち</rt></ruby>。)
+*   <ruby>明日<rt>あした</rt></ruby>着<rt>つ</rt></ruby>くという<rt>れんらく</rt></ruby>が<rt>はい</rt></ruby>りました。(接到<rt>ざつ</rt></ruby>息<rt>そく</rt></ruby>说，<rt>あした</rt></ruby>到<rt>つ</rt></ruby>。)

@@ -1,0 +1,3115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日语语法学习助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* Custom styles for ruby text */
+        ruby {
+            ruby-align: center;
+        }
+
+        rt {
+            font-size: 0.6em;
+            color: #6b7280;
+        }
+
+        /* Smooth transitions */
+        .grammar-card {
+            transition: all 0.3s ease;
+        }
+
+        .grammar-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Importance badge colors */
+        .importance-high {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .importance-medium {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .importance-low {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        /* Mastered style */
+        .mastered {
+            opacity: 0.6;
+            background: #f0fdf4 !important;
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1f2937;
+                color: #f3f4f6;
+            }
+
+            .grammar-card {
+                background: #374151 !important;
+            }
+
+            .mastered {
+                background: #064e3b !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <h1 class="text-2xl font-bold">📚 日语语法学习助手</h1>
+                <div class="flex flex-wrap gap-2 items-center">
+                    <!-- Sort Controls -->
+                    <select id="sortBy"
+                        class="px-3 py-2 rounded-lg bg-white/20 backdrop-blur text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50">
+                        <option value="lesson" class="text-gray-800">按课程排序</option>
+                        <option value="importance" class="text-gray-800">按重要度排序</option>
+                    </select>
+                    <!-- Filter Controls -->
+                    <select id="filterLesson"
+                        class="px-3 py-2 rounded-lg bg-white/20 backdrop-blur text-white border border-white/30 focus:outline-none focus:ring-2 focus:ring-white/50">
+                        <option value="all" class="text-gray-800">所有课程</option>
+                    </select>
+                    <!-- Show Mastered Toggle -->
+                    <label
+                        class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/20 backdrop-blur cursor-pointer">
+                        <input type="checkbox" id="showMastered" checked class="w-4 h-4 rounded">
+                        <span class="text-sm">显示已掌握</span>
+                    </label>
+                    <!-- Export Button -->
+                    <button id="exportPdf"
+                        class="px-4 py-2 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-indigo-50 transition-colors flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        导出PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="container mx-auto px-4 py-4">
+        <div class="flex flex-wrap gap-4 justify-center text-center">
+            <div class="bg-white rounded-xl px-6 py-3 shadow-md">
+                <span class="text-2xl font-bold text-indigo-600" id="totalCount">0</span>
+                <span class="text-gray-500 ml-2">总语法点</span>
+            </div>
+            <div class="bg-white rounded-xl px-6 py-3 shadow-md">
+                <span class="text-2xl font-bold text-green-600" id="masteredCount">0</span>
+                <span class="text-gray-500 ml-2">已掌握</span>
+            </div>
+            <div class="bg-white rounded-xl px-6 py-3 shadow-md">
+                <span class="text-2xl font-bold text-orange-500" id="progressPercent">0%</span>
+                <span class="text-gray-500 ml-2">完成度</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grammar List -->
+    <main class="container mx-auto px-4 py-6">
+        <div id="grammarList" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <!-- Cards will be inserted here -->
+        </div>
+        <div id="emptyState" class="hidden text-center py-12 text-gray-500">
+            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p>没有找到匹配的语法点</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-gray-400 text-sm">
+        <p>日语语法学习助手 | 数据保存在本地浏览器</p>
+    </footer>
+
+    <script>
+        // ========== GRAMMAR DATA (Replace with your actual JSON) ==========
+        const GRAMMAR_DATA_JSON = `[
+  {
+    "lesson": "第1课",
+    "grammar_point": "五十音图 (清音)",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "日语的基础音节结构",
+        "structure": "行（辅音）+ 段（元音）",
+        "explanation": "日语假名共有七十一个，包括清音、浊音、半浊音和拨音。五十音图是按照发音规律排列的清音表，横向称为“行”，纵向称为“段”。",
+        "example": {
+          "sentence": "あ、い、う、え、お",
+          "translation": "五个元音音节。"
+        }
+      }
+    ],
+    "id": "1698a7ed-8ca4-4bea-b007-fa43bdb100a9"
+  },
+  {
+    "lesson": "第1课",
+    "grammar_point": "か行清音的送气与不送气",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "根据假名在单词中的位置改变气流强度",
+        "structure": "词头（送气）/ 词中或词尾（不送气）",
+        "explanation": "か行假名位于单词词头时发送气音（气流强），位于词中、词尾时发不送气音（气流弱）。",
+        "example": {
+          "sentence": "<ruby>きく<rt>きく</rt></ruby>（<ruby>聞<rt>き</rt></ruby>く）",
+          "translation": "听、问（首个‘き’送气，后续‘く’不送气）。"
+        }
+      }
+    ],
+    "id": "a5b548c9-a450-43c9-a022-59f913456977"
+  },
+  {
+    "lesson": "第1课",
+    "grammar_point": "拨音 (ん)",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "鼻音节，不能单独使用",
+        "structure": "其他假名 + ん",
+        "explanation": "拨音「ん」不用于词首，只能接在其他假名之后，与前面的音节拼合构成一个音节。发音时振动声带，气流经鼻腔流出。",
+        "example": {
+          "sentence": "<ruby>本<rt>ほん</rt></ruby>",
+          "translation": "书。"
+        }
+      }
+    ],
+    "id": "a2f7facf-a33e-43cf-a6c5-979152615fce"
+  },
+  {
+    "lesson": "第1课",
+    "grammar_point": "を (助词专用假名)",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "仅作为助词使用",
+        "structure": "只能作为助词",
+        "explanation": "「を」与あ行的「お」同音。它除了作为助词外，不用于表示单词。在わ行中其他假名因与あ行重复而省略。",
+        "example": {
+          "sentence": "「を」はた、だ<ruby>女子<rt>じょし</rt></ruby>（助词）としてしか<ruby>使<rt>つか</rt></ruby>えず...",
+          "translation": "「を」只能作为助词使用，不能表示单词。"
+        }
+      }
+    ],
+    "id": "e0b0e9dc-d30a-4a30-98d1-f645787d8f30"
+  },
+  {
+    "lesson": "第2课",
+    "grammar_point": "･･･は･･･です",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示判断或断定，相当于“……是……”",
+        "structure": "名词/代词 + は + 名词 + です",
+        "explanation": "「は」是提示助词，提示主题；「です」是助动词，表示断定。",
+        "example": {
+          "sentence": "<ruby>これ<rt>これ</rt></ruby>は<ruby>地図<rt>ちず</rt></ruby>です。",
+          "translation": "这是地图。"
+        }
+      }
+    ],
+    "id": "a2afee27-224e-425c-ac18-b484e44d54e8"
+  },
+  {
+    "lesson": "第2课",
+    "grammar_point": "･･･は･･･ですか",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示疑问的判断句",
+        "structure": "･･･は･･･です + か",
+        "explanation": "在句尾加终助词「か」构成疑问句。回答肯定时通常用「はい」起句。",
+        "example": {
+          "sentence": "<ruby>これ<rt>これ</rt></ruby>はあなたの<ruby>荷物<rt>にもつ</rt></ruby>ですか。",
+          "translation": "这是你的行李吗？"
+        }
+      }
+    ],
+    "id": "90275e59-29fa-488d-8b65-b034bd7ed910"
+  },
+  {
+    "lesson": "第2课",
+    "grammar_point": "･･･はなんですか",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "询问事物是什么（特殊疑问句）",
+        "structure": "名词/代词 + は + なん(何) + ですか",
+        "explanation": "「なん」是疑问词，表示“什么”。回答此类特殊疑问句不能用「はい」。",
+        "example": {
+          "sentence": "<ruby>これ<rt>これ</rt></ruby>はなんですか。",
+          "translation": "这是什么？"
+        }
+      }
+    ],
+    "id": "ed937dc4-3826-4fad-8573-8b5a16222bf5"
+  },
+  {
+    "lesson": "第2课",
+    "grammar_point": "格助词「の」",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示所属、所有、性质、状态等，相当于“的”",
+        "structure": "名词1 + の + 名词2",
+        "explanation": "连接两个名词，前面的名词作为定语修饰后续名词。",
+        "example": {
+          "sentence": "<ruby>私<rt>わたし</rt></ruby>の<ruby>荷物<rt>にもつ</rt></ruby>です。",
+          "translation": "是我的行李。"
+        }
+      }
+    ],
+    "id": "cbe91542-842b-44a8-a654-0518c6108ba6"
+  },
+  {
+    "lesson": "第2课",
+    "grammar_point": "提示助词「も」",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示“也”",
+        "structure": "名词 + も",
+        "explanation": "接在名词后面，提示与前文相同或类似的事物。",
+        "example": {
+          "sentence": "これも<ruby>服<rt>ふく</rt></ruby>です。",
+          "translation": "这也是衣服。"
+        }
+      }
+    ],
+    "id": "c76c1bda-3312-44c4-8cc2-d5e70750cd91"
+  },
+  {
+    "lesson": "第2课",
+    "grammar_point": "指示代词「これ/それ/あれ/どれ」",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "指示事物（近称、中称、远称、不定称）",
+        "structure": "指示代词 + は",
+        "explanation": "「これ」指说话人身边的事；「それ」指听话人身边的事；「あれ」指远方的事；「どれ」用于疑问。",
+        "example": {
+          "sentence": "<ruby>本<rt>ほん</rt></ruby>はどれですか。",
+          "translation": "书是哪一个？"
+        }
+      }
+    ],
+    "id": "1e17f64e-a325-401e-9f3c-345022c7b400"
+  },
+  {
+    "lesson": "第2课",
+    "grammar_point": "接尾词「さん」",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "对接话人或第三者的敬称",
+        "structure": "人名 + さん",
+        "explanation": "接在人名后表示尊重，可根据身份译为先生、女士、老/小某等。不能用于自己。",
+        "example": {
+          "sentence": "あの<ruby>人<rt>ひと</rt></ruby>は<ruby>顧<rt>こ</rt></ruby>さんです。",
+          "translation": "那个人是小顾。"
+        }
+      }
+    ],
+    "id": "9d482fb3-daa8-4006-a9b7-5605dbc0b5ab"
+  },
+  {
+    "lesson": "第3课",
+    "grammar_point": "…は…にあります",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示（某物）在（某处）",
+        "structure": "体言（物） + は + 体言（场所） + にあります",
+        "explanation": "「は」提示存在的事物，「に」表示存在的场所。用于表示无生命物体的存在。",
+        "example": {
+          "sentence": "ノートは<ruby>机<rt>つくえ</rt></ruby>の<ruby>上<rt>うえ</rt></ruby>にあります。",
+          "translation": "练习本在桌子上。"
+        }
+      },
+      {
+        "meaning": "表示（某物）不在（某处）",
+        "structure": "体言（物） + は + 体言（场所） + にありません",
+        "explanation": "此句型的否定形式。",
+        "example": {
+          "sentence": "<ruby>本<rt>ほん</rt></ruby>は<ruby>机<rt>つくえ</rt></ruby>の<ruby>上<rt>うえ</rt></ruby>にありません。",
+          "translation": "书不在桌子上。"
+        }
+      }
+    ],
+    "id": "6fa439e1-febe-42ad-bc21-de7958762081"
+  },
+  {
+    "lesson": "第3课",
+    "grammar_point": "…に…が（も）あります",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示（某处）有（某物）",
+        "structure": "体言（场所） + に + 体言（物） + があります",
+        "explanation": "「に」表示场所，「が」提示存在的主体。提问主体时使用疑问词「なに」。",
+        "example": {
+          "sentence": "<ruby>机<rt>つくえ</rt></ruby>の<ruby>前<rt>まえ</rt></ruby>に<ruby>椅子<rt>いす</rt></ruby>があります。",
+          "translation": "桌子前面有椅子。"
+        }
+      },
+      {
+        "meaning": "表示（某处）也有（某物）",
+        "structure": "体言（场所） + に + 体言（物） + もあります",
+        "explanation": "当表示“也有……”时，用助词「も」替换「가」。",
+        "example": {
+          "sentence": "テーブルの<ruby>上<rt>うえ</rt></ruby>にマッチもあります。",
+          "translation": "饭桌上也有火柴。"
+        }
+      }
+    ],
+    "id": "677c577d-9f94-43ab-8cea-a91970c442db"
+  },
+  {
+    "lesson": "第3课",
+    "grammar_point": "…には…",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "（在某处）有/没有……（对比或强调）",
+        "structure": "体言（场所） + には + 体言（物） + があります/はありません",
+        "explanation": "「には」是「に」与「は」的复合。用于提示场所并带有与其他地点对比的含义。用于否定时，后面的「は」起加强语气的引出作用。",
+        "example": {
+          "sentence": "<ruby>部屋<rt>へや</rt></ruby>にはテレビはありません。",
+          "translation": "（这个）房间里没有电视机。"
+        }
+      }
+    ],
+    "id": "f8b37a76-7667-46ae-8564-3749e0e65be7"
+  },
+  {
+    "lesson": "第3课",
+    "grammar_point": "…に…がいくつありますか",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "询问某处有多少个东西",
+        "structure": "体言（场所） + に + 体言（物） + が + いくつありますか",
+        "explanation": "「いくつ」是疑问数词，表示“多少个”。回答时直接使用数词（如みっつ），数词作副词用时不加助词。",
+        "example": {
+          "sentence": "<ruby>部屋<rt>へや</rt></ruby>に<ruby>机<rt>つくえ</rt></ruby>がいくつありますか。",
+          "translation": "房间里有几个书桌？"
+        }
+      }
+    ],
+    "id": "6e1e7be8-1d62-4084-b957-1f71ef48ac90"
+  },
+  {
+    "lesson": "第3课",
+    "grammar_point": "…や…など",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "“…和…等等”",
+        "structure": "体言 + や + 体言 + など",
+        "explanation": "「や」是并列助词，表示不完全罗列。「など」是副助词，表示“等等”，常与「や」呼应使用。",
+        "example": {
+          "sentence": "<ruby>部屋<rt>へや</rt></ruby>に<ruby>机<rt>つくえ</rt></ruby>や<ruby>椅子<rt>いす</rt></ruby>などがあります。",
+          "translation": "房间里有书桌、椅子等。"
+        }
+      }
+    ],
+    "id": "ea20d33a-77e1-402e-9050-42d863d7b746"
+  },
+  {
+    "lesson": "第3课",
+    "grammar_point": "…は…ではありません",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "“…不是……”",
+        "structure": "体言 + は + 体言 + ではありません",
+        "explanation": "「です」的否定形式。表示否定判断，口语中「では」读作「でわ」。",
+        "example": {
+          "sentence": "あそこは<ruby>浴室<rt>よくしつ</rt></ruby>ではありません。",
+          "translation": "那里不是浴室。"
+        }
+      }
+    ],
+    "id": "a877d43d-0baf-4db1-ada3-da6ea0067fce"
+  },
+  {
+    "lesson": "第3课",
+    "grammar_point": "はい、そうです / いいえ、ちがいます",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "是的，是这样 / 不，不是（不对）",
+        "structure": "回答用语",
+        "explanation": "「そう」可替代体言以避免重复。「ちがいます」比「そうではありません」语气更强，带有辩白或反驳口气。",
+        "example": {
+          "sentence": "「あそこは<ruby>浴室<rt>よくしつ</rt></ruby>ですか。」「いいえ、ちがいます。」",
+          "translation": "“那儿是浴室吗？”“不，不是。”"
+        }
+      }
+    ],
+    "id": "1592f0a0-e499-4627-913a-6c2927562f1d"
+  },
+  {
+    "lesson": "第3课",
+    "grammar_point": "场所指示代词 (ここ/そこ/あそこ/どこ)",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "这儿/那儿/那儿（远）/哪里",
+        "structure": "代词",
+        "explanation": "这里（近称，指说话人身边）、那里（中称，指对方身边）、那里（远称，指双方远处）、哪里（疑问）。",
+        "example": {
+          "sentence": "<ruby>本棚<rt>ほんだな</rt></ruby>はここにあります。",
+          "translation": "书架在这儿。"
+        }
+      }
+    ],
+    "id": "1e306667-a25b-467e-8970-ba62c7afc68d"
+  },
+  {
+    "lesson": "第4课",
+    "grammar_point": "形容词作谓语和定语（い形容词）",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "形容词作谓语",
+        "structure": "形容词终止形（い） + です",
+        "explanation": "形容词是表示事物性质和状态的词。作谓语时由终止形后续“です”构成敬体句。",
+        "example": {
+          "sentence": "キャンパスはみんな<ruby>新<rt>あたら</rt></ruby>しいです。",
+          "translation": "校园全部都是新的。"
+        }
+      },
+      {
+        "meaning": "形容词作定语",
+        "structure": "形容词连体形（い） + 名词",
+        "explanation": "形容词修饰名词时的形态叫连体形，词尾不变，直接修饰名词。",
+        "example": {
+          "sentence": "この<ruby>高<rt>たか</rt></ruby>い<ruby>建物<rt>たてもの</rt></ruby>は<ruby>图书馆<rt>としょかん</rt></ruby>です。",
+          "translation": "这幢高大的建筑物是图书馆。"
+        }
+      }
+    ],
+    "id": "9d7f0e2a-6381-4617-9a31-250acca144ae"
+  },
+  {
+    "lesson": "第4课",
+    "grammar_point": "･･･は･･･にいます",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "有生命的物体（人、动物）在某地",
+        "structure": "体言（人/动物） + は + 体言（场所） + にいます",
+        "explanation": "表示人和动物等有生命物体的存在。否定形式为“にいません”。",
+        "example": {
+          "sentence": "<ruby>先生<rt>せんせい</rt></ruby>は<ruby>体育館<rt>たいいくかん</rt></ruby>にいます。",
+          "translation": "老师在体育馆。"
+        }
+      }
+    ],
+    "id": "ce46b7bd-823e-4ca4-bf7e-d23b039c9eee"
+  },
+  {
+    "lesson": "第4课",
+    "grammar_point": "･･･に･･･がいます",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "某地有某人或某生命物体",
+        "structure": "体言（场所） + に + 体言（人/动物） + がいます",
+        "explanation": "表示“（某处）有（某人或某个有生命物体）”。",
+        "example": {
+          "sentence": "<ruby>池<rt>いけ</rt></ruby>の<ruby>中<rt>なか</rt></ruby>にはきれいな<ruby>金魚<rt>きんぎょ</rt></ruby>がいます。",
+          "translation": "池塘里有漂亮的红鱼。"
+        }
+      }
+    ],
+    "id": "cb20e434-1ef1-41f4-96a1-2a3f4b7c6f1f"
+  },
+  {
+    "lesson": "第4课",
+    "grammar_point": "形容动词作谓语和定语",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "形容动词作谓语",
+        "structure": "形容动词词干 + です",
+        "explanation": "形容动词作敬体谓语时，词尾“だ”要变成“です”。",
+        "example": {
+          "sentence": "<ruby>交通<rt>こうつう</rt></ruby>はとても<ruby>便利<rt>べんり</rt></ruby>です。",
+          "translation": "交通非常便利。"
+        }
+      },
+      {
+        "meaning": "形容动词作定语",
+        "structure": "形容动词词干 + な + 名词",
+        "explanation": "形容动词作定语修饰名词时，词尾“だ”要变成“な”，称为连体形。",
+        "example": {
+          "sentence": "ここは<ruby>賑<rt>にぎ</rt></ruby>やかな<ruby>所<rt>ところ</rt></ruby>です。",
+          "translation": "这儿是个热闹的地方。"
+        }
+      }
+    ],
+    "id": "baf0a597-5c61-4f7c-a6ea-17bac9fb217d"
+  },
+  {
+    "lesson": "第4课",
+    "grammar_point": "格助词「へ」",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示移动的方向",
+        "structure": "体言 + へ",
+        "explanation": "接在体言后面表示移动的方向，读作“え”。",
+        "example": {
+          "sentence": "これからホテル<ruby>へ<rt>え</rt></ruby>あんないします。",
+          "translation": "现在我陪您去饭店。"
+        }
+      }
+    ],
+    "id": "e7905a89-e67f-4b4f-8cd5-3f5eb0913c9d"
+  },
+  {
+    "lesson": "第4课",
+    "grammar_point": "数量词+くらい(ぐらい)",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示大概的数量",
+        "structure": "数词 + くらい/ぐらい",
+        "explanation": "副助词，接在数词后面表示大概的数量。",
+        "example": {
+          "sentence": "この<ruby>建物<rt>たてもの</rt></ruby>は<ruby>二十<rt>にじっ</rt></ruby>かいぐらいありますね。",
+          "translation": "这幢楼有二十层左右吧。"
+        }
+      }
+    ],
+    "id": "6b428dc4-518d-497d-85e7-63de7297e790"
+  },
+  {
+    "lesson": "第4课",
+    "grammar_point": "并列助词「と」",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示并列（和）",
+        "structure": "体言 + と + 体言",
+        "explanation": "并列地连接两个事物，相当于汉语的连词“和”。",
+        "example": {
+          "sentence": "そこには<ruby>花<rt>はな</rt></ruby>と<ruby>草<rt>くさ</rt></ruby>がたくさんありますね。",
+          "translation": "那儿有很多花和草呢。"
+        }
+      }
+    ],
+    "id": "285ef169-9cc7-4a29-ae50-7e2f99a56cc3"
+  },
+  {
+    "lesson": "第4课",
+    "grammar_point": "终助词「ね」",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示确认/赞同或感叹",
+        "structure": "句末 + ね",
+        "explanation": "要求对方确认或表示赞同，也可表示感叹。",
+        "example": {
+          "sentence": "キャンパスはとても<ruby>静<rt>しず</rt></ruby>かですね。",
+          "translation": "校园真安静啊。"
+        }
+      }
+    ],
+    "id": "9919c5b3-de12-4911-ad41-758f5de13bda"
+  },
+  {
+    "lesson": "第4课",
+    "grammar_point": "指示连体词「この」「その」「あの」「どの」",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "指示特定的事物",
+        "structure": "この/その/あの/どの + 名词",
+        "explanation": "不能单独使用，必须后续事物名称。指示关系与これ/それ/あれ相同。",
+        "example": {
+          "sentence": "この<ruby>地図<rt>ちず</rt></ruby>はあたらしいですか。",
+          "translation": "这张地图是新的吗？"
+        }
+      }
+    ],
+    "id": "4a378c80-ced7-45d4-83c3-39584de51e5a"
+  },
+  {
+    "lesson": "第4课",
+    "grammar_point": "数词、时间名词的副词性用法",
+    "importance": 6,
+    "usages": [
+      {
+        "meaning": "作状语说明程度或时间",
+        "structure": "数词/时间名词 + 动词/形容词",
+        "explanation": "数词、副词和表示时间的名词可以直接在句中作状语，说明动作或状态。",
+        "example": {
+          "sentence": "<ruby>学生<rt>がくせい</rt></ruby>は<ruby>朝<rt>あさ</rt></ruby>どこにいますか。",
+          "translation": "学生早晨在哪儿呢？"
+        }
+      }
+    ],
+    "id": "ee76dc50-64bd-45ca-b846-c362bea66a16"
+  },
+  {
+    "lesson": "第5课",
+    "grammar_point": "动词的现在时（ます形）",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示动作的意志、习惯或经常性状态",
+        "structure": "动词连用形 + ます/ません",
+        "explanation": "动词连用形后续「ます」表示未来的动作、意志，或经常性、习惯性的动作。否定式为「ません」。",
+        "example": {
+          "sentence": "李さんは<ruby>毎日<rt>まいにち</rt></ruby><ruby>日本語<rt>にほんご</rt></ruby>を<ruby>朗読<rt>ろうどく</rt></ruby>します。",
+          "translation": "小李每天朗读日语。"
+        }
+      }
+    ],
+    "id": "5edeb136-575f-4563-8740-44a601266ebb"
+  },
+  {
+    "lesson": "第5课",
+    "grammar_point": "格助词「を」",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示他动词的宾语",
+        "structure": "体言 + を + 他动词",
+        "explanation": "「を」表示动作所涉及的对象和内容。",
+        "example": {
+          "sentence": "<ruby>私<rt>わたし</rt></ruby>は<ruby>服<rt>ふく</rt></ruby>を<ruby>洗<rt>あら</rt></ruby>います。",
+          "translation": "我洗衣服。"
+        }
+      }
+    ],
+    "id": "034cf12b-c9f5-4fff-92ba-b582179b841b"
+  },
+  {
+    "lesson": "第5课",
+    "grammar_point": "格助词「に」",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示动作发生的具体时刻",
+        "structure": "时间名词 + に",
+        "explanation": "表示动作在某一时刻进行，但在表示时间长短（期间）时不加「に」。",
+        "example": {
+          "sentence": "<ruby>授業<rt>じゅぎょう</rt></ruby>は<ruby>朝<rt>あさ</rt></ruby><ruby>八時<rt>はちじ</rt></ruby>に<ruby>始<rt>はじ</rt></ruby>まります。",
+          "translation": "课在早上八点开始。"
+        }
+      },
+      {
+        "meaning": "表示比例、分配的基准",
+        "structure": "数量/时间 + に + 数量",
+        "explanation": "常介于表示数量含义的词之间，表示分配基准。",
+        "example": {
+          "sentence": "<ruby>一日<rt>いちにち</rt></ruby>に<ruby>二時間<rt>にじかん</rt></ruby>ぐらい<ruby>勉強<rt>べんきょう</rt></ruby>します。",
+          "translation": "一天学习两小时左右。"
+        }
+      }
+    ],
+    "id": "4137137d-da96-4d1b-aff8-6c5aec08933e"
+  },
+  {
+    "lesson": "第5课",
+    "grammar_point": "接尾词「ごろ」与副助词「ぐらい」",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示大概的时间点或时间长度",
+        "structure": "时刻 + ごろ / 时间段 + ぐらい",
+        "explanation": "接在时刻后用「ごろ」表示点；接在时长后用「ぐらい」表示段。",
+        "example": {
+          "sentence": "<ruby>私<rt>わたし</rt></ruby>は<ruby>毎晩<rt>まいばん</rt></ruby><ruby>八時<rt>はちじ</rt></ruby>ごろ<ruby>寝<rt>ね</rt></ruby>ます。",
+          "translation": "我每天晚上八点左右睡觉。"
+        }
+      }
+    ],
+    "id": "1e9295f8-1343-45a8-9b45-0ba5ab26fae5"
+  },
+  {
+    "lesson": "第5课",
+    "grammar_point": "格助词「で」",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示动作发生的场所",
+        "structure": "场所名词 + で",
+        "explanation": "强调在某处通过动作进行某事，不同于表示存在的「に」。",
+        "example": {
+          "sentence": "<ruby>運動場<rt>うんどうじょう</rt></ruby>でバスケットボールをします。",
+          "translation": "在操场打篮球。"
+        }
+      },
+      {
+        "meaning": "表示手段、方法、工具",
+        "structure": "名词（工具等） + で",
+        "explanation": "表示利用某种工具或交通手段完成动作。",
+        "example": {
+          "sentence": "<ruby>自転車<rt>じてんしゃ</rt></ruby>で<ruby>教室<rt>きょうしつ</rt></ruby>へ<ruby>行<rt>い</rt></ruby>きます。",
+          "translation": "骑自行车去教室。"
+        }
+      }
+    ],
+    "id": "534202bb-aebc-415d-9cf7-a3bcfd5245e1"
+  },
+  {
+    "lesson": "第5课",
+    "grammar_point": "格助词「から」「まで」",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示时间的起点和终点",
+        "structure": "时间/场所 + から / まで",
+        "explanation": "「から」表示起点，「まで」表示终点，可单独使用或后续「です」。",
+        "example": {
+          "sentence": "<ruby>毎晩<rt>まいばん</rt></ruby>、<ruby>七時<rt>しちじ</rt></ruby>から<ruby>九時半<rt>くじはん</rt></ruby>まで<ruby>勉強<rt>べんきょう</rt></ruby>します。",
+          "translation": "每天晚上从七点学习到九点半。"
+        }
+      }
+    ],
+    "id": "887fc5dd-a979-4377-80e5-b3b530ddf16b"
+  },
+  {
+    "lesson": "第5课",
+    "grammar_point": "あまり…（否定）",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "不太……；不怎么……",
+        "structure": "あまり + 动词否定式",
+        "explanation": "副词，后接否定表示频率不高或程度不深。",
+        "example": {
+          "sentence": "パンはあまり<ruby>食<rt>た</rt></ruby>べません。",
+          "translation": "不怎么吃面包。"
+        }
+      }
+    ],
+    "id": "aa4fedca-511c-498d-9be8-4cc8a92d2718"
+  },
+  {
+    "lesson": "第5课",
+    "grammar_point": "名词谓语句的中顿形",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示并列、中顿",
+        "structure": "体言 + で、……",
+        "explanation": "将「です」改为「で」用于连接两个句子，起到中顿作用。",
+        "example": {
+          "sentence": "<ruby>李<rt>り</rt></ruby>さんは<ruby>日本語科<rt>にほんごか</rt></ruby>の<ruby>学生<rt>がくせい</rt></ruby>で、<ruby>無錫<rt>むしゃく</rt></ruby>の<ruby>人<rt>ひと</rt></ruby>です。",
+          "translation": "小李是日语专业的学生，是无锡人。"
+        }
+      }
+    ],
+    "id": "b5d771da-899b-42fb-ae98-2cb89f984dba"
+  },
+  {
+    "lesson": "第6课",
+    "grammar_point": "名词谓语句的过去式",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示名词谓语句的过去肯定",
+        "structure": "体言 + でした",
+        "explanation": "叙述过去的事物要用过去式，「でした」的「た」是表示过去的助动词。",
+        "example": {
+          "sentence": "<ruby>昨日<rt>きのう</rt></ruby>は<ruby>日曜日<rt>にちようび</rt></ruby>でした。",
+          "translation": "昨天是星期日。"
+        }
+      },
+      {
+        "meaning": "表示名词谓语句的过去否定",
+        "structure": "体言 + では（じゃ）ありませんでした",
+        "explanation": "表达过去不是某种状态或事物。",
+        "example": {
+          "sentence": "<ruby>昨日<rt>きのう</rt></ruby>は<ruby>金曜日<rt>きんようび</rt></ruby>ではありませんでした。",
+          "translation": "昨天不是星期五。"
+        }
+      }
+    ],
+    "id": "dc5b4798-3121-40a9-88e7-ecf226a075b2"
+  },
+  {
+    "lesson": "第6课",
+    "grammar_point": "动词谓语句的过去式",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示过去已经进行的动作",
+        "structure": "动词连用形 + ました",
+        "explanation": "叙述讲话之前已经进行的动作要用过去式。",
+        "example": {
+          "sentence": "<ruby>地下鉄<rt>ちかてつ</rt></ruby>で<ruby>浦東<rt>うらとも</rt></ruby>へ<ruby>行<rt>い</rt></ruby>きました。",
+          "translation": "坐地铁去了浦东。"
+        }
+      },
+      {
+        "meaning": "表示过去没有发生的动作",
+        "structure": "动词连用形 + ませんでした",
+        "explanation": "表达讲话之前没有做过某动作，或没有发生过某作用。",
+        "example": {
+          "sentence": "<ruby>日曜日<rt>にちようび</rt></ruby>には<ruby>映画<rt>えいが</rt></ruby>を<ruby>見<rt>み</rt></ruby>ませんでした。",
+          "translation": "星期天没有看电影。"
+        }
+      },
+      {
+        "meaning": "询问动作是否已经完成 (与「もう」呼应)",
+        "structure": "もう + 动词ましたか",
+        "explanation": "询问某种动作现在是否已经完了或实现。否定回答常用「まだです」。",
+        "example": {
+          "sentence": "<ruby>李<rt>り</rt></ruby>さんはもう<ruby>来<rt>き</rt></ruby>ましたか。",
+          "translation": "李先生已经来了吗？"
+        }
+      }
+    ],
+    "id": "c382fe92-f283-49c7-a0e6-46f6a51398e1"
+  },
+  {
+    "lesson": "第6课",
+    "grammar_point": "格助词「と」",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示动作的对手、对象",
+        "structure": "人物名词 + と (いっしょに)",
+        "explanation": "表示共同动作的对方或行为的对手、对象。",
+        "example": {
+          "sentence": "<ruby>呂<rt>ろ</rt></ruby>さんと<ruby>会話<rt>かいわ</rt></ruby>の<ruby>練習<rt>れんしゅう</rt></ruby>をしました。",
+          "translation": "和小吕练习了会话。"
+        }
+      }
+    ],
+    "id": "1fc39c11-366a-4cf3-bc85-6b0a7b18e9a3"
+  },
+  {
+    "lesson": "第6课",
+    "grammar_point": "格助词「で」",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示范围",
+        "structure": "场所名词+で+一番",
+        "explanation": "接在体言后面，表示在某个特定范围内。",
+        "example": {
+          "sentence": "<ruby>世紀公園<rt>せいきこうえん</rt></ruby>は<ruby>浦東<rt>うらとも</rt></ruby>で<ruby>一番<rt>いちばん</rt></ruby><ruby>大<rt>おお</rt></ruby>きい<ruby>公園<rt>こうえん</rt></ruby>です。",
+          "translation": "世纪公园是浦东最大的公园。"
+        }
+      },
+      {
+        "meaning": "表示动作的状态或条件",
+        "structure": "数量词 + で",
+        "explanation": "表示动作进行时的人数等状态。",
+        "example": {
+          "sentence": "<ruby>二人<rt>ふたり</rt></ruby>で<ruby>食事<rt>しょくじ</rt></ruby>をしました。",
+          "translation": "两个人一起吃了饭。"
+        }
+      }
+    ],
+    "id": "be9faf92-e0fd-470e-83ac-96ec92f6be16"
+  },
+  {
+    "lesson": "第6课",
+    "grammar_point": "格助词「に」",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示动作的方向或目的地",
+        "structure": "场所名词 + に",
+        "explanation": "表示动作、作用的方向、目的地，作用类似于「へ」。",
+        "example": {
+          "sentence": "<ruby>何時<rt>なんじ</rt></ruby>ごろ<ruby>大学<rt>だいがく</rt></ruby>に<ruby>帰<rt>かえ</rt></ruby>りましたか。",
+          "translation": "几点左右回大学的？"
+        }
+      },
+      {
+        "meaning": "表示动作的着落点或接受者",
+        "structure": "体言 + に",
+        "explanation": "指明动作最终停留的地方或接受动作的对象。",
+        "example": {
+          "sentence": "<ruby>母<rt>おかあ</rt></ruby>さんに<ruby>電話<rt>でんわ</rt></ruby>をしましたか。",
+          "translation": "给你母亲打电话了吗？"
+        }
+      }
+    ],
+    "id": "237096ce-7bae-434f-a2ae-d8faa3818ee4"
+  },
+  {
+    "lesson": "第6课",
+    "grammar_point": "疑问词+か",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示不确定",
+        "structure": "疑问词 + か",
+        "explanation": "用于表示不确定具体是什么人、地点或事物。",
+        "example": {
+          "sentence": "どこかへ<ruby>出掛<rt>でか</rt></ruby>けましたか。",
+          "translation": "去什么地方了吗？"
+        }
+      }
+    ],
+    "id": "39c183ed-06e4-4b4f-95f7-f24442fd4275"
+  },
+  {
+    "lesson": "第6课",
+    "grammar_point": "形容词的否定式",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示形容词的否定",
+        "structure": "形容词词冠 + くありません",
+        "explanation": "把词尾「い」改成连用形「く」后接「ありません」。「いい」要变成「よくありません」。",
+        "example": {
+          "sentence": "<ruby>値段<rt>ねだん</rt></ruby>はあまり<ruby>高<rt>たか</rt></ruby>くありません。",
+          "translation": "价格不太贵。"
+        }
+      }
+    ],
+    "id": "4b100fac-0488-4739-be64-c664cccaeb3a"
+  },
+  {
+    "lesson": "第6课",
+    "grammar_point": "形容动词的否定式",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示形容动词的否定",
+        "structure": "形容动词词干 + では（じゃ）ありません",
+        "explanation": "把「です」改成「ではありません」。",
+        "example": {
+          "sentence": "あまり<ruby>静<rt>しず</rt></ruby>かではありません。",
+          "translation": "不太安静。"
+        }
+      }
+    ],
+    "id": "d3171e1a-8910-4dd3-85e9-c6b53081bdaa"
+  },
+  {
+    "lesson": "第7课",
+    "grammar_point": "形容词的连接式",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示并列、中顿或较弱的因果关系",
+        "structure": "形容词词尾「い」→「くて」",
+        "explanation": "用于连接另一个形容词、形容动词、动词或句子。表示并列或因果关系（后句是前句条件下的结果）。注意「いい」变为「よくて」。",
+        "example": {
+          "sentence": "北京の<ruby>料理<rt>りょうり</rt></ruby>はとても<ruby>豊富<rt>ほうふ</rt></ruby>で<ruby>美味<rt>おい</rt></ruby>しかったです。",
+          "translation": "北京的料理非常丰富且好吃。"
+        }
+      }
+    ],
+    "id": "b8ff9fa0-1bb6-4acb-af5f-f873e206bea6"
+  },
+  {
+    "lesson": "第7课",
+    "grammar_point": "形容动词的连接式",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示并列、中顿或因果关系",
+        "structure": "形容动词词尾「だ」→「で」",
+        "explanation": "「で」后面连词形容词、形容动词、动词或句子。用法与形容词连接式相同。",
+        "example": {
+          "sentence": "このホテルは<ruby>静<rt>しず</rt></ruby>かで<ruby>綺麗<rt>きれい</rt></ruby>です。",
+          "translation": "这家酒店既安静又漂亮。"
+        }
+      }
+    ],
+    "id": "eb33c4fe-bc96-44b8-b99e-6696a533083d"
+  },
+  {
+    "lesson": "第7课",
+    "grammar_point": "形容词的过去式和过去否定式",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示过去的状态或性质",
+        "structure": "过去式：词尾「い」→「かったです」；过去否定：词尾「い」→「くありませんでした」",
+        "explanation": "表示回忆过去某个时期的性质或状态，也可表示感叹。",
+        "example": {
+          "sentence": "<ruby>昼<rt>ひる</rt></ruby>はちょっと<ruby>暑<rt>あつ</rt></ruby>かったですが、<ruby>朝<rt>あさ</rt></ruby>と<ruby>夜<rt>よる</rt></ruby>はあまり<ruby>暑<rt>あつ</rt></ruby>くありませんでした。",
+          "translation": "白天虽然有点热，但早晚不怎么热。"
+        }
+      }
+    ],
+    "id": "3c30fba2-61be-437d-9ea9-d57bdb2ae7eb"
+  },
+  {
+    "lesson": "第7课",
+    "grammar_point": "形容动词的过去式和过去否定式",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示过去的状态或性质",
+        "structure": "过去式：词尾「だ」→「でした」；过去否定：词尾「だ」→「ではありませんでした/じゃありませんでした」",
+        "explanation": "形容动词过去式结句，用于回忆过去的情况。口语中常将「では」说成「じゃ」。",
+        "example": {
+          "sentence": "ホテルはあまり<ruby>静<rt>しず</rt></ruby>かじゃありませんでした。",
+          "translation": "酒店不怎么安静。"
+        }
+      }
+    ],
+    "id": "2777a4ec-16ee-4edb-9a2a-c07279ccbb73"
+  },
+  {
+    "lesson": "第7课",
+    "grammar_point": "疑问词 + が",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "作主语的疑问及其回答",
+        "structure": "疑问词 + が",
+        "explanation": "格助词「が」表示主语。当疑问词作主语时必须用「が」而不能用「は」，回答时也对应使用「が」。",
+        "example": {
+          "sentence": "<ruby>何月<rt>なんがつ</rt></ruby>が<ruby>一番<rt>いちばん</rt></ruby><ruby>暑<rt>あつ</rt></ruby>いですか。",
+          "translation": "几月份最热？"
+        }
+      }
+    ],
+    "id": "8f6c42c4-6fcd-4117-9557-cf0c4d316909"
+  },
+  {
+    "lesson": "第7课",
+    "grammar_point": "接续助词「が」",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示转折关系",
+        "structure": "句子 + が、句子",
+        "explanation": "接在句末，连接两个相反或不协调的事项。",
+        "example": {
+          "sentence": "とても<ruby>楽<rt>たの</rt></ruby>しかったですが、すこし<ruby>緊張<rt>きんちょう</rt></ruby>しました。",
+          "translation": "虽然非常愉快，但是有点紧张。"
+        }
+      },
+      {
+        "meaning": "表示铺垫（顺接）",
+        "structure": "句子 + が、句子",
+        "explanation": "连接没有转折意义的前后两句，仅起连接作用，用于交代背景或前提。",
+        "example": {
+          "sentence": "<ruby>失礼<rt>しつれい</rt></ruby>ですが、<ruby>田中<rt>たなか</rt></ruby>さんは<ruby>今年<rt>ことし</rt></ruby>おいくつですか。",
+          "translation": "冒昧问一下，田中先生今年多大了？"
+        }
+      }
+    ],
+    "id": "7d971e85-018f-4744-8f4d-1f5c90a527d3"
+  },
+  {
+    "lesson": "第7课",
+    "grammar_point": "格助词「が」用于客观描述",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "描述客观事物的性质或状态",
+        "structure": "名词 + が + 形容词/形容动词",
+        "explanation": "用于对客观事物进行描述，被描述的主体在句中使用「が」表示。",
+        "example": {
+          "sentence": "<ruby>観光客<rt>かんこうきゃく</rt></ruby>が<ruby>多<rt>おお</rt></ruby>かったですね。",
+          "translation": "游客很多呢。"
+        }
+      }
+    ],
+    "id": "154fc89e-aadf-46c2-beb3-61456fde7137"
+  },
+  {
+    "lesson": "第7课",
+    "grammar_point": "指示词的承上启下作用",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "指示谈话中出现的事物",
+        "structure": "これ/それ/あれ, この/その/あの",
+        "explanation": "「こ」系指代刚讲过或接下来的事，「そ」系指对方刚讲过或听者了解的事，「あ」系指双方都了解的事。",
+        "example": {
+          "sentence": "<ruby>昨日<rt>きのう</rt></ruby>は<ruby>私<rt>わたし</rt></ruby>の<ruby>誕生日<rt>たんじょうび</rt></ruby>でした。<ruby>それ<rt>それ</rt></ruby>はよかったですね。",
+          "translation": "昨天是我的生日。那可太好了。"
+        }
+      }
+    ],
+    "id": "56743666-abbb-4a0d-a0c6-3770f2e8dd4d"
+  },
+  {
+    "lesson": "第7课",
+    "grammar_point": "接头词「お」和「ご」",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示尊重或恭敬",
+        "structure": "お/ご + 名词",
+        "explanation": "接在与尊长有关的人或物前。一般「お」接固有词，「ご」接汉语词。",
+        "example": {
+          "sentence": "ご<ruby>親切<rt>しんせつ</rt></ruby>ありがとうございました。",
+          "translation": "多谢您的热情帮助。"
+        }
+      }
+    ],
+    "id": "dbb2a297-74bb-4498-9fb2-f5e4e80901f4"
+  },
+  {
+    "lesson": "第8课",
+    "grammar_point": "动词持续体 (〜ている)",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示正在进行的动作",
+        "structure": "动词连用形 + ている",
+        "explanation": "接在表示具体动作的动词后面，表示动作正在进行。",
+        "example": {
+          "sentence": "ある<ruby>人<rt>ひと</rt></ruby>は<ruby>歌<rt>うた</rt></ruby>を<ruby>歌<rt>うた</rt></ruby>っています。",
+          "translation": "有的人正在唱歌。"
+        }
+      },
+      {
+        "meaning": "表示状态或结果的存续",
+        "structure": "动词连用形 + ている",
+        "explanation": "表示某种状态或动作结果的持续状态。",
+        "example": {
+          "sentence": "<ruby>二<rt>に</rt></ruby><ruby>週間<rt>しゅうかん</rt></ruby>ほど<ruby>国<rt>くに</rt></ruby>へ<ruby>帰<rt>かえ</rt></ruby>っていました。",
+          "translation": "回老家（并呆在那里）大约两周了。"
+        }
+      },
+      {
+        "meaning": "表示经常、反复进行的动作",
+        "structure": "动词连用形 + ている",
+        "explanation": "用于描述习惯性的行为或职业状态。",
+        "example": {
+          "sentence": "<ruby>父<rt>ちち</rt></ruby>は<ruby>貿易会社<rt>ぼうえきがいしゃ</rt></ruby>に<ruby>勤<rt>つと</rt></ruby>めています。",
+          "translation": "父亲在贸易公司工作。"
+        }
+      }
+    ],
+    "id": "558b5835-c5e6-4963-9153-e38e2f1f9749"
+  },
+  {
+    "lesson": "第8课",
+    "grammar_point": "数量词+ほど",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示大概的数量（概数）",
+        "structure": "数量词 + ほど",
+        "explanation": "副助词，表示“大约”，与「ぐらい」意思相近。",
+        "example": {
+          "sentence": "<ruby>先生<rt>せんせい</rt></ruby>は<ruby>十日<rt>とおか</rt></ruby>ほど<ruby>前<rt>まえ</rt></ruby>に<ruby>日本<rt>にほん</rt></ruby>へ<ruby>行<rt>い</rt></ruby>きました。",
+          "translation": "老师在十来天之前去日本了。"
+        }
+      }
+    ],
+    "id": "506a008b-3934-480a-afb1-4e1dd37e254b"
+  },
+  {
+    "lesson": "第8课",
+    "grammar_point": "动词连接式 (〜て)",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示动作的先后顺序、并列或原因",
+        "structure": "动词连用形 + て",
+        "explanation": "连接前后句，使句子产生并列、先后、因果等逻辑关系。",
+        "example": {
+          "sentence": "<ruby>昨日<rt>きのう</rt></ruby>デパートへ<ruby>行<rt>い</rt></ruby>って<ruby>買<rt>か</rt></ruby>い<ruby>物<rt>もの</rt></ruby>をしました。",
+          "translation": "昨天去了百货商店买了东西。"
+        }
+      }
+    ],
+    "id": "3707df1a-6403-44a5-b42d-ea61cd764d9f"
+  },
+  {
+    "lesson": "第8课",
+    "grammar_point": "动词持续体作定语",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "作为形容词性的成分修饰体言",
+        "structure": "动词持续体 (ている/ていた) + 名词",
+        "explanation": "修饰名词，表示正在做某事或处于某状态的人或物。",
+        "example": {
+          "sentence": "<ruby>新聞<rt>しんぶん</rt></ruby>を<ruby>読<rt>よ</rt></ruby>んでいる<ruby>人<rt>ひと</rt></ruby>は<ruby>李<rt>り</rt></ruby><ruby>先生<rt>せんせい</rt></ruby>です。",
+          "translation": "正在看报纸的人是李老师。"
+        }
+      }
+    ],
+    "id": "a625137f-5d8e-4247-8548-26b2b7496fed"
+  },
+  {
+    "lesson": "第8课",
+    "grammar_point": "〜ながら",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "一边……一边……",
+        "structure": "动词连用形 (ます形) + ながら",
+        "explanation": "表示同一主体同时进行两个动作，重点放在后一个动作上。",
+        "example": {
+          "sentence": "<ruby>鈴木<rt>すずき</rt></ruby>さんはテレビを<ruby>見<rt>み</rt></ruby>ながら<ruby>宿題<rt>しゅくだい</rt></ruby>をしています。",
+          "translation": "铃木同学一边看电视一边做作业。"
+        }
+      }
+    ],
+    "id": "63cbcfcb-0d2d-4ed1-b908-ee1d9d9bc5f3"
+  },
+  {
+    "lesson": "第8课",
+    "grammar_point": "〜を (移动性自动词)",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示离开、经过或移动的场所",
+        "structure": "场所名词 + を + 移动性自动词",
+        "explanation": "格助词「を」后续带有移动性质的自动词（如流、散歩、飛ぶ、出る等）。",
+        "example": {
+          "sentence": "<ruby>飛行機<rt>ひこうき</rt></ruby>が<ruby>空<rt>そら</rt></ruby>を<ruby>飛<rt>と</rt></ruby>んでいます。",
+          "translation": "飞机在天空中飞。"
+        }
+      }
+    ],
+    "id": "5186c5f0-51cc-45ee-8f38-89cb83e8efee"
+  },
+  {
+    "lesson": "第8课",
+    "grammar_point": "终助词「よ」",
+    "importance": 6,
+    "usages": [
+      {
+        "meaning": "加强语气",
+        "structure": "句子末尾 + よ",
+        "explanation": "用于提醒、告知或强调自己的想法，语气较强。",
+        "example": {
+          "sentence": "<ruby>李<rt>り</rt></ruby>さん、<ruby>友達<rt>ともだち</rt></ruby>が<ruby>来<rt>き</rt></ruby>ましたよ。",
+          "translation": "小李，你朋友来了喔。"
+        }
+      }
+    ],
+    "id": "d1d1c5d2-2a83-4847-8930-bb06c3d56644"
+  },
+  {
+    "lesson": "第8课",
+    "grammar_point": "助词重叠 (格助词+提示助词)",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "强调或对比特定成分",
+        "structure": "助词 (に/へ/から/で等) + は/も",
+        "explanation": "当提示助词「は」或「も」作用于由格助词构成的成分时，发生重叠。",
+        "example": {
+          "sentence": "<ruby>上海<rt>しゃんはい</rt></ruby>ではこの<ruby>建物<rt>たてもの</rt></ruby>が<ruby>一番<rt>いちばん</rt></ruby><ruby>高<rt>たか</rt></ruby>いです。",
+          "translation": "在上海，这幢楼是最高的。"
+        }
+      }
+    ],
+    "id": "a4587d29-f9cf-4161-9309-3293ba8f87ba"
+  },
+  {
+    "lesson": "第8课",
+    "grammar_point": "〜になります",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "变得、成为",
+        "structure": "体言 + になる",
+        "explanation": "表示从一种状态变为另一种状态。",
+        "example": {
+          "sentence": "<ruby>李<rt>り</rt></ruby>さんも<ruby>先生<rt>せんせい</rt></ruby>になりました。",
+          "translation": "小李也成了一名教师。"
+        }
+      }
+    ],
+    "id": "a983dd03-c7db-44e7-907d-dbdc516f2f03"
+  },
+  {
+    "lesson": "第8课",
+    "grammar_point": "「知っています」与「知りません」",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "知道/不知道",
+        "structure": "知っている / 知らない",
+        "explanation": "“知道”用持续体；“不知道”必须用「知りません」，不能用持续体的否定。",
+        "example": {
+          "sentence": "<ruby>知<rt>し</rt></ruby>っていますか。",
+          "translation": "你知道吗？"
+        }
+      }
+    ],
+    "id": "d93233ee-dce6-456a-a77d-b429946ae1c5"
+  },
+  {
+    "lesson": "第9课",
+    "grammar_point": "･･･は･･･が･･･ (形容词或形容动词作谓语)",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示情感、能力、好恶的对象",
+        "structure": "名词A(人) + は + 名词B(对象) + が + 形容词/形容动词",
+        "explanation": "表示人的好恶或水平高低时，感情或能力所及的对象用「が」表示，具有这种感情或能力的人用「は」表示。",
+        "example": {
+          "sentence": "彼は<ruby>納豆<rt>なっとう</rt></ruby>や<ruby>梅干<rt>うめぼし</rt></ruby>が<ruby>嫌<rt>きら</rt></ruby>いです。",
+          "translation": "他讨厌纳豆和梅子。"
+        }
+      },
+      {
+        "meaning": "主谓词组充当谓语",
+        "structure": "名词A + は + 名词B + が + 形容词/形容动词",
+        "explanation": "除了表示对象，也可以构成主谓词组，描述主题的某个部分或属性。",
+        "example": {
+          "sentence": "上海は<ruby>冬<rt>ふゆ</rt></ruby>が<ruby>寒<rt>さむ</rt></ruby>いです。",
+          "translation": "上海冬天寒冷。"
+        }
+      }
+    ],
+    "id": "ce8f9c67-c744-4a5d-bfa9-2dc962758dc3"
+  },
+  {
+    "lesson": "第9课",
+    "grammar_point": "BよりAのほうが･･･です",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "比较句：与B相比A更…",
+        "structure": "名词B + より + 名词A + のほうが + 形容词/形容动词",
+        "explanation": "表示两个事物之间的比较。「より」表示比较的对象，「のほうが」表示程度更甚的一方。",
+        "example": {
+          "sentence": "<ruby>日本<rt>にほん</rt></ruby>より<ruby>中国<rt>ちゅうごく</rt></ruby>のほうが<ruby>広<rt>ひろ</rt></ruby>いです。",
+          "translation": "中国比日本大。"
+        }
+      }
+    ],
+    "id": "13826b36-7eba-4c2e-b1ed-54be23896ad6"
+  },
+  {
+    "lesson": "第9课",
+    "grammar_point": "形式体言「の」和「こと」",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "动词/句子体言化",
+        "structure": "用言连体形 + の/こと",
+        "explanation": "在句中起体言作用，没有实质意义。使得用言或句子可以后续助词充当主语、宾语等。",
+        "example": {
+          "sentence": "<ruby>李<rt>り</rt></ruby>さんは<ruby>音楽<rt>おんがく</rt></ruby>を<ruby>聞<rt>き</rt></ruby>くのが<ruby>好<rt>す</rt></ruby>きです。",
+          "translation": "李先生喜欢听音乐。"
+        }
+      }
+    ],
+    "id": "034e6a93-8a24-457e-8030-c1868e0aa750"
+  },
+  {
+    "lesson": "第9课",
+    "grammar_point": "形容词/形容动词连用形 + なる",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示状态的变化",
+        "structure": "形容词词干+く / 形容动词词干+に + なる",
+        "explanation": "表示从一种状态自然地或人为地变化成另一种状态。",
+        "example": {
+          "sentence": "これからだんだん<ruby>暑<rt>あつ</rt></ruby>くなります。",
+          "translation": "从现在起要渐渐地热起来了。"
+        }
+      }
+    ],
+    "id": "0a035566-df46-4914-b48d-0e269acd74a5"
+  },
+  {
+    "lesson": "第9课",
+    "grammar_point": "･･･も･･･も",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示“都…”或“既不…也不…”",
+        "structure": "名词(或部分助词) + も + 名词 + も",
+        "explanation": "罗列两个或以上相同性质的事物，后面接肯定表示“都”，接否定表示“全盘否定”。",
+        "example": {
+          "sentence": "<ruby>日本料理<rt>にほんりょうり</rt></ruby>も<ruby>中華料理<rt>ちゅうかりょうり</rt></ruby>もみな<ruby>好<rt>す</rt></ruby>きです。",
+          "translation": "日本菜和中国菜都喜欢。"
+        }
+      }
+    ],
+    "id": "9c3d71f5-dc31-4483-81f1-afcc77279981"
+  },
+  {
+    "lesson": "第9课",
+    "grammar_point": "疑问词 + でも / も",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "疑问词+でも：全面肯定",
+        "structure": "疑问词 + でも + 肯定谓语",
+        "explanation": "表示无论哪种情况都一样，含义为“无论...都...”。",
+        "example": {
+          "sentence": "<ruby>何<rt>なに</rt></ruby>でも<ruby>好<rt>す</rt></ruby>きです。",
+          "translation": "什么都喜欢。"
+        }
+      },
+      {
+        "meaning": "疑问词+も：全面肯定或全面否定",
+        "structure": "疑问词 + も + 肯定/否定谓语",
+        "explanation": "后续肯定表全面肯定（如：どれも），后续否定表全面否定（如：だれも）。",
+        "example": {
+          "sentence": "<ruby>部屋<rt>へや</rt></ruby>の<ruby>中<rt>なか</rt></ruby>にはだれもいません。",
+          "translation": "屋里没人。"
+        }
+      }
+    ],
+    "id": "bca9e7b5-0497-4710-bd13-0069edb492f2"
+  },
+  {
+    "lesson": "第9课",
+    "grammar_point": "･･･できる (表示可能)",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "动作的可能性/某种能力",
+        "structure": "动词连体形 + ことができる",
+        "explanation": "表示外部条件允许或者本身具有某种能力。",
+        "example": {
+          "sentence": "<ruby>私<rt>わたし</rt></ruby>は<ruby>英語<rt>えいご</rt></ruby>の<ruby>新聞<rt>しんぶん</rt></ruby>を<ruby>読<rt>よ</rt></ruby>むことができます。",
+          "translation": "我能看英语报纸。"
+        }
+      },
+      {
+        "meaning": "掌握某种技能",
+        "structure": "体言 + ができる",
+        "explanation": "直接接在名词后，表示会某事或具备某能力。",
+        "example": {
+          "sentence": "あなたは<ruby>日本語<rt>にほんご</rt></ruby>ができますか。",
+          "translation": "你会日语吗？"
+        }
+      }
+    ],
+    "id": "d74f03c2-a12d-4dcf-8a85-c3d2c6fbd33c"
+  },
+  {
+    "lesson": "第9课",
+    "grammar_point": "AとBと（では）どちらが･･･ですか",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "提问两者之中的选择",
+        "structure": "名词A + と + 名词B + と、どちらが + 形容词/形容动词 + ですか",
+        "explanation": "用于询问在A和B两个事物中，哪一个更符合某种特质。",
+        "example": {
+          "sentence": "テニスとバドミントンと、どちらが<ruby>上手<rt>じょうず</rt></ruby>ですか。",
+          "translation": "网球和羽毛球，哪个更擅长？"
+        }
+      }
+    ],
+    "id": "0cc8cae3-154f-414f-979d-b173f590705d"
+  },
+  {
+    "lesson": "第9课",
+    "grammar_point": "動詞作定語的形式 (动词修饰名词)",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "现在时/状态修饰名次",
+        "structure": "动词连体形（基本形）+ 名词",
+        "explanation": "动词的基本形可以直接修饰后面的名词。",
+        "example": {
+          "sentence": "<ruby>私<rt>わたし</rt></ruby>が<ruby>乗<rt>の</rt></ruby>るバスは<ruby>上海駅<rt>しゃんはいえき</rt></ruby>から<ruby>来<rt>き</rt></ruby>ます。",
+          "translation": "我要乘的公共汽车是从上海站开来的。"
+        }
+      },
+      {
+        "meaning": "过去时修饰名词",
+        "structure": "动词连用形 + た + 名词",
+        "explanation": "动词的过去式也可以修饰名词，表示动作已经发生或完成的状态。",
+        "example": {
+          "sentence": "これは<ruby>昨日<rt>きのう</rt></ruby><ruby>読<rt>よ</rt></ruby>んだ<ruby>雑誌<rt>ざっし</rt></ruby>です。",
+          "translation": "这是昨天看过的杂志。"
+        }
+      }
+    ],
+    "id": "1c58b32e-11f2-456f-b58f-a311f2168b36"
+  },
+  {
+    "lesson": "第10课",
+    "grammar_point": "副助词「だけ」表示限定",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示限定某种范围、数量或程度",
+        "structure": "体言/数词/副词/助词/用言连体形 + だけ",
+        "explanation": "表示限于某种范围或数量，相当于汉语的“只”、“仅仅”。后续助词「が」「を」时常省略。",
+        "example": {
+          "sentence": "<ruby>正<rt>ただ</rt></ruby>しい<ruby>答<rt>こた</rt></ruby>えは一つだけです。",
+          "translation": "正确的答案只有一个。"
+        }
+      }
+    ],
+    "id": "2086f197-bbd7-4e36-8af4-55956901d49d"
+  },
+  {
+    "lesson": "第10课",
+    "grammar_point": "接续助词「から」表示原因、理由",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示主观的原因、理由",
+        "structure": "用言/助动词终止形 + から",
+        "explanation": "前项表示原因，后项表示结果。后项常接命令、劝诱、推量等表达方式。",
+        "example": {
+          "sentence": "<ruby>予鈴<rt>よれい</rt></ruby>が<ruby>鳴<rt>な</rt></ruby>りましたから<ruby>席<rt>せき</rt></ruby>に<ruby>着<rt>つ</rt></ruby>いてください。",
+          "translation": "预备铃响了，请就座。"
+        }
+      }
+    ],
+    "id": "36a486fa-6bca-4b78-92b5-3f05731e3777"
+  },
+  {
+    "lesson": "第10课",
+    "grammar_point": "〜てはいけません",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示禁止做某事",
+        "structure": "动词/形容词连用形 + てはいけません",
+        "explanation": "表示“不可以”、“不允许”。常用于长辈对晚辈或上级对下级的命令。口语常说成「ちゃいけない/じゃいけない」。",
+        "example": {
+          "sentence": "<ruby>二<rt>ふた</rt></ruby>つ<ruby>選<rt>えら</rt></ruby>んではいけません。",
+          "translation": "不可以选两个。"
+        }
+      }
+    ],
+    "id": "2b81662e-b308-4452-a03e-f2be8b55977c"
+  },
+  {
+    "lesson": "第10课",
+    "grammar_point": "〜なくてはいけません",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示必须、非...不可",
+        "structure": "动词未然形 + なくてはいけません / 体言・形容动词词干 + でなくてはいけません",
+        "explanation": "用双重否定表示肯定，语气坚决，常用于提醒注意或表达义务。",
+        "example": {
+          "sentence": "前の<ruby>答<rt>こた</rt></ruby>えを消しゴムできれいに<ruby>消<rt>け</rt></ruby>さなくてはいけません。",
+          "translation": "必须用橡皮把先前的答案擦干净。"
+        }
+      }
+    ],
+    "id": "1a8f0e03-8e9a-443c-97ac-2abccc353081"
+  },
+  {
+    "lesson": "第10课",
+    "grammar_point": "〜ても（でも）いい",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示许可、可能性、让步或主动提议",
+        "structure": "动词/形容词连用形 (て形) + もいい",
+        "explanation": "常用于表示“可以……”。如果是拨音便或ガ行イ音便，则用「でもいい」。",
+        "example": {
+          "sentence": "<ruby>書<rt>か</rt></ruby>き<ruby>直<rt>なお</rt></ruby>してもいいですが、きれいに<ruby>消<rt>け</rt></ruby>してください。",
+          "translation": "虽然可以重写，但请擦干净。"
+        }
+      }
+    ],
+    "id": "62629d74-f3b7-4dca-a9d3-ccf9dff8c0b4"
+  },
+  {
+    "lesson": "第10课",
+    "grammar_point": "〜なくてもいい",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示“不必……也可以”",
+        "structure": "动词未然形/形容词・形容动词连用形 + なくてもいい",
+        "explanation": "表示许可不去做某事或状态不需要达到某种程度。同义词有「なくてもかまいません」。",
+        "example": {
+          "sentence": "<ruby>問題用紙<rt>もんだいようし</rt></ruby>は<ruby>出<rt>だ</rt></ruby>さなくてもいいですか。",
+          "translation": "可以不交问题卷吗？"
+        }
+      }
+    ],
+    "id": "cd30a460-eff0-4a85-a356-ab894f1e30d9"
+  },
+  {
+    "lesson": "第10课",
+    "grammar_point": "形容词、形容动词作状语",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "形容词作状语（修饰动词）",
+        "structure": "形容词词尾「い」变为「く」 + 动词",
+        "explanation": "形容词通过连用形变换来修饰后续的动作。",
+        "example": {
+          "sentence": "<ruby>最初<rt>さいしょ</rt></ruby>に<ruby>名前<rt>なまえ</rt></ruby>を<ruby>正<rt>ただ</rt></ruby>しく<ruby>書<rt>か</rt></ruby>いてください。",
+          "translation": "请首先正确地写下名字。"
+        }
+      },
+      {
+        "meaning": "形容动词作状语（修饰动词）",
+        "structure": "形容动词词干 + に + 动词",
+        "explanation": "形容动词词尾「だ」变为「に」来修饰动作。",
+        "example": {
+          "sentence": "前の<ruby>答<rt>こた</rt></ruby>えを消しゴムできれいに<ruby>消<rt>け</rt></ruby>してください。",
+          "translation": "请用橡皮把先前的答案擦干净。"
+        }
+      }
+    ],
+    "id": "0941340a-9f6c-4148-914f-b179f2023971"
+  },
+  {
+    "lesson": "第10课",
+    "grammar_point": "〜てください / 〜てくださいませんか",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示请求或要求",
+        "structure": "动词连用形 (て形) + ください/くださいませんか",
+        "explanation": "「〜てください」表示“请”。「〜てくださいませんか」语气更委婉，用于对尊长或需客气的场合。",
+        "example": {
+          "sentence": "<ruby>席<rt>せき</rt></ruby>に<ruby>着<rt>つ</rt></ruby>いてください。",
+          "translation": "请就座。"
+        }
+      }
+    ],
+    "id": "6ddb982d-1c9b-4b1e-a968-d1baf891ee2f"
+  },
+  {
+    "lesson": "第10课",
+    "grammar_point": "〜ないでください",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示请求对方不要做某事",
+        "structure": "动词未然形 + ないでください",
+        "explanation": "是「〜てください」的否定形式，相当于“请不要……”。",
+        "example": {
+          "sentence": "ボールペンや<ruby>万年筆<rt>まんねんひつ</rt></ruby>で<ruby>書<rt>か</rt></ruby>かないでください。",
+          "translation": "请不要用圆珠笔或钢笔书写。"
+        }
+      }
+    ],
+    "id": "3c0cc621-97b5-44d9-852a-720ef199bbd6"
+  },
+  {
+    "lesson": "第10课",
+    "grammar_point": "「ない」的用法",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "否定助动词与补助形容词",
+        "structure": "动词未然形 + ない / 形容词・形容动词连用形 + ない",
+        "explanation": "「ない」作为否定助动词接在动词后，作为补助形容词接在形容词/形容动词连用形后。可作定语修饰体言。",
+        "example": {
+          "sentence": "<ruby>問題用紙<rt>もんだいようし</rt></ruby>を<ruby>出<rt>だ</rt></ruby>さない<ruby>人<rt>ひと</rt></ruby>は<ruby>採点<rt>さいてん</rt></ruby>しません。",
+          "translation": "不交问题卷的人不给评分。"
+        }
+      }
+    ],
+    "id": "e9539bd9-f6dd-498d-a70f-7c7f331bfa2d"
+  },
+  {
+    "lesson": "第11课",
+    "grammar_point": "表示欲望的「ほしい」和「ほしがる」",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "（第一人称）想要某物",
+        "structure": "体言 + がほしい（欲しい）",
+        "explanation": "形容词，表示讲话人的企求，问句也用于第二人称。想要的东西用「が」表示。",
+        "example": {
+          "sentence": "わたしは<ruby>中国語<rt>ちゅうごくご</rt></ruby>の<ruby>辞書<rt>じしょ</rt></ruby>が<ruby>ほ<rt>ほ</rt></ruby>しいのです。",
+          "translation": "我想要一本汉语词典。"
+        }
+      },
+      {
+        "meaning": "（第三人称）想要某物",
+        "structure": "体言 + をほしがる",
+        "explanation": "ラ行五段他动词，用于叙述第三人称的企求。想要的东西用「を」表示。",
+        "example": {
+          "sentence": "<ruby>山田<rt>やまだ</rt></ruby>さんは<ruby>大<rt>おお</rt></ruby>きい<ruby>家<rt>いえ</rt></ruby>を<ruby>ほ<rt>ほ</rt></ruby>しがっています。",
+          "translation": "山田想要有个大点的房子。"
+        }
+      }
+    ],
+    "id": "9c42f74d-b13d-4a9e-83ba-53cddf56b974"
+  },
+  {
+    "lesson": "第11课",
+    "grammar_point": "表示希望的「たい」和「たがる」",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "（第一人称）想做某事",
+        "structure": "动词连用形 + たい",
+        "explanation": "表示讲话人想做某事，问句可用于第二人称。对象语可用「を」或「が」表示。",
+        "example": {
+          "sentence": "<ruby>何<rt>なに</rt></ruby>が<ruby>買<rt>か</rt></ruby>いたいんですか。",
+          "translation": "你想买什么呢？"
+        }
+      },
+      {
+        "meaning": "（第三人称）想做某事",
+        "structure": "动词连用形 + たがる",
+        "explanation": "表示讲话人观察到的别人流露在外的愿望。",
+        "example": {
+          "sentence": "<ruby>李<rt>り</rt></ruby>さんはこの<ruby>仕事<rt>しごと</rt></ruby>を<ruby>引<rt>ひ</rt></ruby>き<ruby>受<rt>う</rt></ruby>けたがっています。",
+          "translation": "小李想接受这项工作。"
+        }
+      },
+      {
+        "meaning": "婉转地表示意愿",
+        "structure": "动词连用形 + たいと思っています",
+        "explanation": "比单纯的「たい」语气更柔和、婉转。",
+        "example": {
+          "sentence": "<ruby>張<rt>ちょう</rt></ruby>さんはたくさんのことを<ruby>勉強<rt>べんきょう</rt></ruby>したいと<ruby>思<rt>おも</rt></ruby>っています。",
+          "translation": "小张想学习很多东西。"
+        }
+      }
+    ],
+    "id": "f3b73264-f747-40e8-b94b-2fe230a0996d"
+  },
+  {
+    "lesson": "第11课",
+    "grammar_point": "〜う(よう)と思う",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示意志",
+        "structure": "动词意志形（未然形+う/よう） + と思い（ます／っています）",
+        "explanation": "用于向别人表示自己做某事的意志。五段动词词尾变オ段加「う」，一、サ、カ变动词未然形加「よう」。",
+        "example": {
+          "sentence": "<ruby>中国語<rt>ちゅうごくご</rt></ruby>を<ruby>身<rt>み</rt></ruby>につけようと<ruby>思<rt>おも</rt></ruby>っています。",
+          "translation": "我想掌握汉语。"
+        }
+      }
+    ],
+    "id": "ad2ea61a-86da-4fa8-b13d-63f6486b962e"
+  },
+  {
+    "lesson": "第11课",
+    "grammar_point": "のです／んです",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "解释、说明或强调语气",
+        "structure": "用言连体形 + のです / 名词 + なのです",
+        "explanation": "用于对某种情形的说明、解释或作为前提要求对方说明。口语常用「んです」。",
+        "example": {
+          "sentence": "あっ、<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>っているんですか。",
+          "translation": "啊呀，是在下雨吗？"
+        }
+      }
+    ],
+    "id": "3d0a7c8a-c8b6-4378-afa2-70751552ce9c"
+  },
+  {
+    "lesson": "第11课",
+    "grammar_point": "〜つもりです",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "打算、意图",
+        "structure": "动词连体形 + つもりです",
+        "explanation": "表示意志或计划。否定式为「つもりはありません」，语气略带辩解。",
+        "example": {
+          "sentence": "<ruby>日本<rt>にほん</rt></ruby>へ<ruby>行<rt>い</rt></ruby>くつもりはありません。",
+          "translation": "我没打算去日本。"
+        }
+      }
+    ],
+    "id": "d28e1449-809e-4b37-b447-08bb73e670dd"
+  },
+  {
+    "lesson": "第11课",
+    "grammar_point": "〜ために",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示目的",
+        "structure": "名词+の/动词连体形 + ために",
+        "explanation": "表示为了达成某一目标而进行的努力。前后主语必须一致。",
+        "example": {
+          "sentence": "<ruby>日本語<rt>にほんご</rt></ruby>を<ruby>身<rt>み</rt></ruby>につけるために<ruby>一生懸命勉強<rt>いっしょうけんめいべんきょう</rt></ruby>しています。",
+          "translation": "为了掌握日语而拼命学习。"
+        }
+      }
+    ],
+    "id": "01ff755b-064c-48c9-b50e-d12d1d4366a8"
+  },
+  {
+    "lesson": "第11课",
+    "grammar_point": "准体助词「の」",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "代指人或物",
+        "structure": "体言 + の",
+        "explanation": "后面省去了名词，起代词作用。",
+        "example": {
+          "sentence": "この <ruby>MP3<rt></rt></ruby> は<ruby>友達<rt>ともだち</rt></ruby>のです。",
+          "translation": "这个MP3是朋友的。"
+        }
+      }
+    ],
+    "id": "1a377d56-23af-4855-baf6-d8165a5fb5c0"
+  },
+  {
+    "lesson": "第11课",
+    "grammar_point": "〜ので",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示原因或理由",
+        "structure": "用言连体形 + ので / 体言 + な + ので",
+        "explanation": "表示客观的因果关系，语气较委婉。后项通常不用意志、命令等形式。",
+        "example": {
+          "sentence": "<ruby>日曜<rt>にちよう</rt></ruby>なので、<ruby>授業<rt>じゅぎょう</rt></ruby>がありません。",
+          "translation": "因为是星期天，所以没课。"
+        }
+      }
+    ],
+    "id": "c1f34715-b1f7-4b72-bbcd-845f834e7a41"
+  },
+  {
+    "lesson": "第11课",
+    "grammar_point": "疑问短句的用法",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "疑问句作为动词的宾语内容",
+        "structure": "疑问句 + か + 动词",
+        "explanation": "当疑问句作为「知道、决定、说」等动词的内容时，接「か」后直接跟动词。",
+        "example": {
+          "sentence": "<ruby>どの<rt>どの</rt></ruby><ruby>大学<rt>だいがく</rt></ruby>に<ruby>入<rt>はい</rt></ruby>るかはまだ<ruby>決<rt>き</rt></ruby>めていません。",
+          "translation": "入哪所大学还没有决定。"
+        }
+      }
+    ],
+    "id": "d04ba8da-6e72-4da7-a9cd-123aaaa5247b"
+  },
+  {
+    "lesson": "第11课",
+    "grammar_point": "〜てから",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "……之后",
+        "structure": "动词连用形 + てから",
+        "explanation": "表示两个动作在时间上的先后顺序。",
+        "example": {
+          "sentence": "よく<ruby>聞<rt>き</rt></ruby>いてから<ruby>答<rt>こた</rt></ruby>えてください。",
+          "translation": "请仔细听后再回答。"
+        }
+      }
+    ],
+    "id": "688383a3-3491-4de5-8bb5-b994a6831879"
+  },
+  {
+    "lesson": "第12课",
+    "grammar_point": "･･･は･･･と言います",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示称谓、写法或读法",
+        "structure": "体言 + は + 内容 + と言います/書きます/読みます",
+        "explanation": "表示“(某东西)可说成……,可读作……,可写成……”时用此句型。“某东西”用「は」表示,「言う」等动词的内容用补格助詞「と」表示。",
+        "example": {
+          "sentence": "この<ruby>町<rt>まち</rt></ruby>の<ruby>名前<rt>なまえ</rt></ruby>は「ホンチャオ」と言います。",
+          "translation": "这个小镇名叫“虹桥”。"
+        }
+      },
+      {
+        "meaning": "表示定义、对比（とは）或兼提（とも）",
+        "structure": "体言 + とは/とも + 动词",
+        "explanation": "「とは」表示定义、对比或引出否定，「とも」表示兼提。",
+        "example": {
+          "sentence": "「<ruby>月<rt>げつ</rt></ruby>」は「げつ」と<ruby>読<rt>よ</rt></ruby>みます。「<ruby>つき<rt>つき</rt></ruby>」とも<ruby>読<rt>よ</rt></ruby>みます。",
+          "translation": "「月」读作「げつ」，也读作「つき」。"
+        }
+      }
+    ],
+    "id": "677079b8-5256-44f4-a33b-73538e2f1c8d"
+  },
+  {
+    "lesson": "第12课",
+    "grammar_point": "･･･は(△△に)･･･と言います",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示某人（对某人）说某事",
+        "structure": "说话人 + は + (对象 + に) + 「内容」 + と言う",
+        "explanation": "「は」表示说话的人,「と」表示说的内容。「に」表示说的对象。说话内容若为直接引用则加引号。",
+        "example": {
+          "sentence": "<ruby>牧野<rt>まきの</rt></ruby>さんは「あした<ruby>早<rt>はや</rt></ruby>く<ruby>学校<rt>がっこう</rt></ruby>に<ruby>来<rt>く</rt></ruby>てください」と<ruby>田中<rt>たなか</rt></ruby>さんに言いました。",
+          "translation": "牧野对田中说：“明天请早点来学校。”"
+        }
+      },
+      {
+        "meaning": "间接引用",
+        "structure": "说话人 + は + 简体句 + と言う",
+        "explanation": "内容为间接引用时无需引号，且内容要用简体结句。",
+        "example": {
+          "sentence": "<ruby>彼女<rt>かのじょ</rt></ruby>は<ruby>十時<rt>じゅうじ</rt></ruby>ごろ<ruby>電話<rt>でんわ</rt></ruby>をすると言いました。",
+          "translation": "她说十点左右打电话。"
+        }
+      }
+    ],
+    "id": "c7fdb1e3-0fd0-45cf-b252-0430a0ac3844"
+  },
+  {
+    "lesson": "第12课",
+    "grammar_point": "并列助词「とか」",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "列举同类事物",
+        "structure": "体言/动词终止形 + とか",
+        "explanation": "用于列举几个同类的例子,语气随意,比较口语化。并列体言时，最后一个「とか」可省略。",
+        "example": {
+          "sentence": "<ruby>休日<rt>きゅうじつ</rt></ruby>はテレビを<ruby>見<rt>み</rt></ruby>るとか、<ruby>買<rt>か</rt></ruby>い<ruby>物<rt>もの</rt></ruby>をするとかして<ruby>過<rt>す</rt></ruby>ごします。",
+          "translation": "休息天大都是看看电视、买买东西度过的。"
+        }
+      }
+    ],
+    "id": "6d3fe06e-53fb-49bc-81f2-9d4c7e7a60c6"
+  },
+  {
+    "lesson": "第12课",
+    "grammar_point": "･･･とともに",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示共同、同时或随动",
+        "structure": "名词/动词终止形 + とともに",
+        "explanation": "接在人或单位后面表示共同做某事；接在动词、名词后表示两件事同时发生或一方随另一方变化。属于书面语。",
+        "example": {
+          "sentence": "<ruby>父<rt>ちち</rt></ruby>とともに<ruby>帰<rt>かえ</rt></ruby>りました。",
+          "translation": "和父亲一起回去了。"
+        }
+      }
+    ],
+    "id": "8090fc88-4d2e-4423-86a7-b4afaa1d239e"
+  },
+  {
+    "lesson": "第12课",
+    "grammar_point": "･･･なければなりません",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示必须、非……不可",
+        "structure": "动词未然形 + なければなりません",
+        "explanation": "强调必要性或义务性,通常是从社会常理或事物性质出发作出的判断。",
+        "example": {
+          "sentence": "あした<ruby>授業<rt>じゅぎょう</rt></ruby>があるので、<ruby>今日<rt>きょう</rt></ruby><ruby>早<rt>はや</rt></ruby>く<ruby>帰<rt>かえ</rt></ruby>らなければなりません。",
+          "translation": "明天还有课,今天必须早点儿回去。"
+        }
+      }
+    ],
+    "id": "c1eddf7a-38c2-4625-9476-a528d1a3ea8c"
+  },
+  {
+    "lesson": "第12课",
+    "grammar_point": "･･･を･･･と言います",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "把……叫做……",
+        "structure": "名词 + を + 称呼 + と言います",
+        "explanation": "用于用其他语言或说法改换某个词语的说法。",
+        "example": {
+          "sentence": "<ruby>私<rt>わたし</rt></ruby>たちはこれを<ruby>慣用語<rt>かんようご</rt></ruby>と言います。",
+          "translation": "我们把这叫做惯用句。"
+        }
+      }
+    ],
+    "id": "322d1afb-3f75-4e94-9b41-f2fa7b58f2ed"
+  },
+  {
+    "lesson": "第12课",
+    "grammar_point": "「･･･という」+体言",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示称呼或名称（叫做……的）",
+        "structure": "体言 + という + 体言",
+        "explanation": "用于指出人、物、地点的名称。",
+        "example": {
+          "sentence": "<ruby>牧野<rt>まきの</rt></ruby>という<ruby>人<rt>ひと</rt></ruby>からあなたに<ruby>電話<rt>でんわ</rt></ruby>がありました。",
+          "translation": "有个叫牧野的人给你打了电话。"
+        }
+      },
+      {
+        "meaning": "表示内容（……这样的消息/联系）",
+        "structure": "简体句 + という + 体言",
+        "explanation": "用于引出后面体言的具体内容。",
+        "example": {
+          "sentence": "<ruby>明日<rt>あした</rt></ruby><ruby>着<rt>つ</rt></ruby>くという<ruby>連絡<rt>れんらく</rt></ruby>が<ruby>入<rt>はい</rt></ruby>りました。",
+          "translation": "接到消息说，明天到。"
+        }
+      }
+    ],
+    "id": "7c62f66b-0641-4674-a472-504199848149"
+  },
+  {
+    "lesson": "第12课",
+    "grammar_point": "动词连用形+なさい",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示命令",
+        "structure": "动词连用形 + なさい",
+        "explanation": "由「なさる」演变而来。比命令形婉转但比「…てください」生硬，多用于长辈对晚辈或老师对学生，不用于尊长。",
+        "example": {
+          "sentence": "<ruby>次<rt>つぎ</rt></ruby>の<ruby>質問<rt>しつもん</rt></ruby>に<ruby>答<rt>こた</rt></ruby>えなさい。",
+          "translation": "请回答下列问题。"
+        }
+      }
+    ],
+    "id": "76f7facb-be54-458d-b67c-f3f524abfbe5"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "授受动词 (あげる・さしあげる・やる)",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示“我”或他人给别人东西（主语为授与者）",
+        "structure": "甲は乙に･･･をあげる (差しあげる・やる)",
+        "explanation": "あげる用于平辈；さしあげる用于长辈或上位者；やる用于晚辈、动植物或关系亲密的平辈。",
+        "example": {
+          "sentence": "<ruby>私<rt>わたし</rt></ruby>は<ruby>王<rt>おう</rt></ruby>さんにアルバムをあげる。",
+          "translation": "我给小王一本相册。"
+        }
+      }
+    ],
+    "id": "06407c5d-de4b-4e1d-8186-f997a6b60f42"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "授受动词 (もらう・いただく)",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示从他人那里得到东西（主语为接受者）",
+        "structure": "乙は甲から/に･･･をもらう (いただく)",
+        "explanation": "もらう用于平辈；いただく是自谦语，用于从长辈或上位者处得到东西。",
+        "example": {
+          "sentence": "<ruby>昨日<rt>きのう</rt></ruby><ruby>山田<rt>やまだ</rt></ruby><ruby>先生<rt>せんせい</rt></ruby>から<ruby>手紙<rt>てがみ</rt></ruby>をいただきました。",
+          "translation": "昨天我收到了山田老师的来信。"
+        }
+      }
+    ],
+    "id": "0b63830b-7a94-4449-bc52-99ce58caaeef"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "授受动词 (くれる・くださる)",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示别人给我或我方人员东西（主语为授与者）",
+        "structure": "甲はわたしに...をくれる (くださる)",
+        "explanation": "くれる用于平辈或晚辈给我；くださる是敬语，用于上级或长辈给我。",
+        "example": {
+          "sentence": "<ruby>先生<rt>せんせい</rt></ruby>は『<ruby>就職案内<rt>しゅうしょくあんない</rt></ruby>』をくださいました。",
+          "translation": "老师给了我一本名为《就业介绍》的书。"
+        }
+      }
+    ],
+    "id": "0aa25788-78f5-48ff-9468-a8d66640668d"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "格助词「と」表示比较的对象",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "接在体言后，表示比较的对象",
+        "structure": "体言 + と (同じ/違う/似る)",
+        "explanation": "常与表示相同、不同、相似的词连用。",
+        "example": {
+          "sentence": "これは<ruby>前<rt>まえ</rt></ruby>のものと<ruby>違<rt>ちが</rt></ruby>います。",
+          "translation": "这和前面那个不一样。"
+        }
+      }
+    ],
+    "id": "f325bcd9-deed-425c-b2b0-0eb759848b9a"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "でしょう",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示委婉的断定或推测",
+        "structure": "活用词终止形/体言 + でしょう（语调下降）",
+        "explanation": "表示讲话人的主观推测，常与「たぶん」连用。",
+        "example": {
+          "sentence": "あしたはたぶん<ruby>雨<rt>あめ</rt></ruby>が<ruby>降<rt>ふ</rt></ruby>るでしょう。",
+          "translation": "明天大概会下雨吧。"
+        }
+      },
+      {
+        "meaning": "表示确认或征求对方同意",
+        "structure": "活用词终止形/体言 + でしょう（语调上扬）",
+        "explanation": "用于向对方确认某事或寻求认同。",
+        "example": {
+          "sentence": "なかなかいいでしょう。",
+          "translation": "挺不错的，对吧？"
+        }
+      }
+    ],
+    "id": "d613220e-6940-4a78-8b31-60da689a735c"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "格助词「で」表示原因",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "接在体言后表示原因和理由",
+        "structure": "体言 + で",
+        "explanation": "表示发生某种情况或结果的原因，后项通常不接意志、命令或劝诱句。",
+        "example": {
+          "sentence": "<ruby>出張<rt>しゅっちょう</rt></ruby>で<ruby>北京<rt>ぺきん</rt></ruby>へ<ruby>行<rt>い</rt></ruby>きました。",
+          "translation": "因为出差去了北京。"
+        }
+      }
+    ],
+    "id": "6599e858-5b2b-4481-95f0-97eeed3ecdaa"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "移动目的 (に)",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示去/来某地的目的",
+        "structure": "动词ます形/名词 + に + 行く/来る/帰る",
+        "explanation": "目的地用「へ」表示，动作的目的用「に」表示。",
+        "example": {
+          "sentence": "<ruby>映画<rt>えいが</rt></ruby>を<ruby>見<rt>み</rt></ruby>に<ruby>行<rt>い</rt></ruby>きましょう。",
+          "translation": "一起去看电影吧。"
+        }
+      }
+    ],
+    "id": "0a624aa6-bc08-4edb-bd95-3cac7cacc0d7"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "并列助词「か」",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示选择",
+        "structure": "体言/活用词终止形 + か",
+        "explanation": "在给出的项中选择其一。",
+        "example": {
+          "sentence": "<ruby>中国<rt>ちゅうごく</rt></ruby>のお<ruby>茶<rt>ちゃ</rt></ruby>かお<ruby>酒<rt>さけ</rt></ruby>をあげるつもりです。",
+          "translation": "打算送中国茶或者酒。"
+        }
+      }
+    ],
+    "id": "4fcdcd3d-d7c5-45b9-af9c-f089a1b31974"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "〜（た）ことがある",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示曾经有过的经历",
+        "structure": "动词た形 + ことがある",
+        "explanation": "表示过去曾有某种经验。否定式为「たことはありません」。",
+        "example": {
+          "sentence": "<ruby>私<rt>わたし</rt></ruby>は<ruby>富士山<rt>ふじさん</rt></ruby>に<ruby>登<rt>のぼ</rt></ruby>ったことがあります。",
+          "translation": "我爬过富士山。"
+        }
+      }
+    ],
+    "id": "0e9eb243-3cef-489e-a179-d5062a1a7000"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "数量词 + も",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "加强语气，强调数量之多或程度之深",
+        "structure": "数量词 + も",
+        "explanation": "接在数词后强调程度高或极点，常与否定连用表示“一次也不”。",
+        "example": {
+          "sentence": "<ruby>一度<rt>いちど</rt></ruby>もあけたことがありません。",
+          "translation": "一次也没有给过。"
+        }
+      }
+    ],
+    "id": "72317546-cc62-4466-8a14-deaf4d771e9c"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "〜ましょう",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示提议、劝诱或主动承担",
+        "structure": "动词连用形 + ましょう",
+        "explanation": "用于提议对方一起做某事，或第一人称主动提出为对方做某事。",
+        "example": {
+          "sentence": "<ruby>一<rt>いち</rt></ruby><ruby>枚<rt>まい</rt></ruby>あげましょう。",
+          "translation": "给你一张吧。"
+        }
+      }
+    ],
+    "id": "a577158c-3eeb-4638-9c54-de1b0816a98e"
+  },
+  {
+    "lesson": "第13课",
+    "grammar_point": "〜ませんか",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "礼貌地征求对方意见或邀请",
+        "structure": "动词未然形 + ませんか",
+        "explanation": "询问对方是否愿意做某动作，语气比「ましょうか」更委婉。",
+        "example": {
+          "sentence": "<ruby>映画<rt>えいが</rt></ruby>を<ruby>見<rt>み</rt></ruby>に<ruby>行<rt>い</rt></ruby>きませんか。",
+          "translation": "不去（一起去）看电影吗？"
+        }
+      }
+    ],
+    "id": "246648ce-f632-4bf0-b3bf-afbe477f77a3"
+  },
+  {
+    "lesson": "第14课",
+    "grammar_point": "假定形 (ば形)",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示事物的一般性条件",
+        "structure": "动词/形容词假定形 + ば",
+        "explanation": "表示只要前项成立，后项就一定成立的关系。",
+        "example": {
+          "sentence": "<ruby>春<rt>はる</rt></ruby>が<ruby>来<rt>く</rt></ruby>れば<ruby>花<rt>はな</rt></ruby>が<ruby>咲<rt>さ</rt></ruby>きます。",
+          "translation": "春天来了，花就开了。"
+        }
+      },
+      {
+        "meaning": "表示假定顺接条件",
+        "structure": "动词/形容词假定形 + ば",
+        "explanation": "表示假设的情况，常与推测、意志、询问等呼应。",
+        "example": {
+          "sentence": "<ruby>早<rt>はや</rt></ruby>く<ruby>行<rt>い</rt></ruby>かなければ、<ruby>間<rt>ま</rt></ruby>に<ruby>合<rt>あ</rt></ruby>わないでしょう。",
+          "translation": "不早点去的话，会来不及的吧。"
+        }
+      }
+    ],
+    "id": "6d59d81e-d861-4d5e-a22b-e27eb6373b9d"
+  },
+  {
+    "lesson": "第14课",
+    "grammar_point": "〜てみる",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示尝试做某事",
+        "structure": "动词连用形（て形）+ みる",
+        "explanation": "表示试着做某件事，看结果如何。",
+        "example": {
+          "sentence": "<ruby>食<rt>た</rt></ruby>べてみてください。<ruby>美味<rt>おい</rt></ruby>しいでしょう。",
+          "translation": "请尝尝看，味道不错吧。"
+        }
+      }
+    ],
+    "id": "028541ab-0adc-495b-bdbc-2edfa209a6b9"
+  },
+  {
+    "lesson": "第14课",
+    "grammar_point": "〜ばいい",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示建议、劝告或希望",
+        "structure": "动词假定形 + ばいい",
+        "explanation": "表示“只要……就行”，用于建议方法，或表示讲话人的某种希望。",
+        "example": {
+          "sentence": "<ruby>地下鉄<rt>ちかてつ</rt></ruby>に<ruby>乗<rt>の</rt></ruby>り<ruby>換<rt>か</rt></ruby>えればいいのです。",
+          "translation": "只要换乘地铁就行了。"
+        }
+      }
+    ],
+    "id": "8e513372-cfd6-49c7-b3f9-8ad50eb90f90"
+  },
+  {
+    "lesson": "第14课",
+    "grammar_point": "〜と思う",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示主观判断或意见",
+        "structure": "简体句 + と思う",
+        "explanation": "相当于“我认为……”“我想……”。如果是“と思っています”则表示某种想法已经持续了一段时间。",
+        "example": {
+          "sentence": "<ruby>六時<rt>ろくじ</rt></ruby>に<ruby>出発<rt>しゅっぱつ</rt></ruby>すれば<ruby>間<rt>ま</rt></ruby>に<ruby>合<rt>あ</rt></ruby>うと<ruby>思<rt>おも</rt></ruby>います。",
+          "translation": "我想六点出发的话是能赶上的。"
+        }
+      }
+    ],
+    "id": "3b21b880-721f-4772-99c6-76355c14fe86"
+  },
+  {
+    "lesson": "第14课",
+    "grammar_point": "〜ほうがいい",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示建议及劝告",
+        "structure": "动词连体形（过去式或现在式）+ ほうがいい",
+        "explanation": "劝对方采取某种行为。否定形式常用“〜ないほうがいい”。",
+        "example": {
+          "sentence": "<ruby>自転車<rt>じてんしゃ</rt></ruby>で<ruby>行<rt>い</rt></ruby>くほうがいいでしょう。",
+          "translation": "骑自行车去比较好（那是比较好的做法）。"
+        }
+      }
+    ],
+    "id": "aa779fe2-c6b9-4a24-859e-5f8ab0592226"
+  },
+  {
+    "lesson": "第14课",
+    "grammar_point": "命令形",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示强烈的命令或口令",
+        "structure": "动词命令形词尾变化",
+        "explanation": "语气简慢、生硬，常用于口号、口令，或在引语中出现。",
+        "example": {
+          "sentence": "<ruby>赤<rt>あか</rt></ruby>は「<ruby>止<rt>と</rt></ruby>まれ」。",
+          "translation": "红灯是“停”。"
+        }
+      }
+    ],
+    "id": "574333b8-4e6c-4977-a536-b3bcca844af2"
+  },
+  {
+    "lesson": "第14课",
+    "grammar_point": "〜ば〜ほど",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示“越……越……”",
+        "structure": "用言假定形 + ば + 同一用言连体形 + ほど",
+        "explanation": "表示程度随着前项条件的增长而增长。",
+        "example": {
+          "sentence": "<ruby>早<rt>はや</rt></ruby>ければ<ruby>早<rt>はや</rt></ruby>いほどいいです。",
+          "translation": "越早越好。"
+        }
+      }
+    ],
+    "id": "c2648c18-0de8-4536-8f7a-51112d16cc0c"
+  },
+  {
+    "lesson": "第14课",
+    "grammar_point": "〜ても",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示逆接假定（即使……也……）",
+        "structure": "动词/形容词连用形（て/で）+ も",
+        "explanation": "表示出现了前项假设的情况，但后项结果并未按照常理改变，或出现相反情况。",
+        "example": {
+          "sentence": "<ruby>少<rt>すこ</rt></ruby>しぐらい<ruby>天気<rt>てんき</rt></ruby>が<ruby>悪<rt>わる</rt></ruby>くても<ruby>行<rt>い</rt></ruby>きます。",
+          "translation": "即使天气稍微有点不好也要去。"
+        }
+      }
+    ],
+    "id": "03b0da4f-95cb-40da-8ba8-58b46fbab1bf"
+  },
+  {
+    "lesson": "第14课",
+    "grammar_point": "少しぐらい",
+    "importance": 6,
+    "usages": [
+      {
+        "meaning": "表示最低程度或微量",
+        "structure": "少し/ちょっと + ぐらい",
+        "explanation": "接在部分副词后表示某种最低限度的程度。",
+        "example": {
+          "sentence": "<ruby>少<rt>すこ</rt></ruby>しぐらい<ruby>難<rt>むずか</rt></ruby>しくても<ruby>大丈夫<rt>だいじょうぶ</rt></ruby>です。",
+          "translation": "稍微有一点难也没关系。"
+        }
+      }
+    ],
+    "id": "28506029-815f-4ad8-b385-656df585510f"
+  },
+  {
+    "lesson": "第15课",
+    "grammar_point": "样态助动词「そうだ」",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "表示基于视觉观察的样态或迹象",
+        "structure": "动词连用形 / 形容词、形容动词词干 + そうだ",
+        "explanation": "主要用于客观地描述讲话者观察、感觉到的某种情形或迹象。形容词「いい」变为「よさそうだ」，「ない」变为「なさそうだ」。",
+        "example": {
+          "sentence": "このご<ruby>飯<rt>はん</rt></ruby>は<ruby>美味<rt>おい</rt></ruby>しそうです。",
+          "translation": "这碗饭看上去很好吃。"
+        }
+      },
+      {
+        "meaning": "表示事物发生的可能性",
+        "structure": "动词连用形 + そうだ",
+        "explanation": "表示动作、作用即将发生，常与副词「いまにも」呼应。",
+        "example": {
+          "sentence": "<ruby>今<rt>いま</rt></ruby>にも<ruby>落<rt>お</rt></ruby>ちそうです。",
+          "translation": "眼看着就要掉下去了。"
+        }
+      },
+      {
+        "meaning": "样态助动词的否定形式",
+        "structure": "形容词/动词 + なさそうだ / そうに（も）ありません",
+        "explanation": "形容词否定用「～くなさそうだ」，动词否定用「～そうに（も）ありません」。",
+        "example": {
+          "sentence": "<ruby>牛<rt>ぎゅう</rt></ruby>どんの<ruby>作<rt>つく</rt></ruby>り<ruby>方<rt>かた</rt></ruby>は<ruby>難<rt>むずか</rt></ruby>しくなさそうです。",
+          "translation": "牛肉盖饭的做法看来并不难。"
+        }
+      }
+    ],
+    "id": "03ce99d5-b2e6-4699-88f5-841be92d356f"
+  },
+  {
+    "lesson": "第15课",
+    "grammar_point": "「やすい」「にくい」构成的复合形容词",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "容易进行某动作或实现某状态",
+        "structure": "动词连用形 + やすい",
+        "explanation": "「やすい」接在动词连用形后，表示该动作容易施行。",
+        "example": {
+          "sentence": "この<ruby>辞書<rt>じしょ</rt></ruby>は<ruby>字<rt>じ</rt></ruby>が<ruby>大<rt>おお</rt></ruby>きくて、<ruby>使<rt>つか</rt></ruby>いやすいです。",
+          "translation": "这本辞典字大，容易查（使用）。"
+        }
+      },
+      {
+        "meaning": "难以进行某动作或实现某状态",
+        "structure": "动词连用形 + にくい",
+        "explanation": "「にくい」接在动词连用形后，表示该动作难以施行。",
+        "example": {
+          "sentence": "ここは<ruby>歩<rt>ある</rt></ruby>きにくいですね。",
+          "translation": "这儿不好走（难走）啊。"
+        }
+      }
+    ],
+    "id": "5e651b41-25e3-4c4b-80ad-dc241ec399d0"
+  },
+  {
+    "lesson": "第15课",
+    "grammar_point": "形式体言「とおり」",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "如同……、和……一样",
+        "structure": "名词+の / 动词连体形 + とおり",
+        "explanation": "表示后面的动作、状态与前面的基准完全一致。",
+        "example": {
+          "sentence": "<ruby>先生<rt>せんせい</rt></ruby>の<ruby>教<rt>おし</rt></ruby>えたとおりにやりなさい。",
+          "translation": "请照老师教的去做。"
+        }
+      }
+    ],
+    "id": "f2f66fd7-c690-4516-95b1-afc4c9018437"
+  },
+  {
+    "lesson": "第15课",
+    "grammar_point": "「には」表示目的",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "想要实现某目的的话（必须……）",
+        "structure": "动词连体形 + には",
+        "explanation": "前项是目的，后项是为达到该目的所必需的行为或手段。常用于规范性、习惯性事项。",
+        "example": {
+          "sentence": "<ruby>通訳<rt>つうやく</rt></ruby>になるには、<ruby>会話<rt>かいわ</rt></ruby>に<ruby>力<rt>ちから</rt></ruby>を<ruby>入<rt>い</rt></ruby>れなければなりません。",
+          "translation": "要当口译就要在会话上下工夫。"
+        }
+      }
+    ],
+    "id": "0937caae-5039-4919-a71c-c3829624c503"
+  },
+  {
+    "lesson": "第15课",
+    "grammar_point": "格助词「に」表示结果",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示动作、作用的结果",
+        "structure": "体言 + に",
+        "explanation": "表示事物经过某种变化或动作后产生的结果形态。",
+        "example": {
+          "sentence": "りんごを<ruby>四<rt>よっ</rt></ruby>つに<ruby>切<rt>き</rt></ruby>りました。",
+          "translation": "把苹果切成了四块。"
+        }
+      }
+    ],
+    "id": "561cdde4-5dd7-48bf-8919-1d4534b0acc5"
+  },
+  {
+    "lesson": "第15课",
+    "grammar_point": "接尾词「さ」",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "将形容词/形容动词名词化",
+        "structure": "形容词/形容动词词干 + さ",
+        "explanation": "将其转化为表示性质、状态的程度的名词。",
+        "example": {
+          "sentence": "<ruby>富士山<rt>ふじさん</rt></ruby>の<ruby>高<rt>たか</rt></ruby>さはどれぐらいですか。",
+          "translation": "富士山有多高？"
+        }
+      }
+    ],
+    "id": "f2fdb052-41ad-47cc-84c3-2804170504f4"
+  },
+  {
+    "lesson": "第15课",
+    "grammar_point": "それほど･･･（后接否定）",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "并不那么……、不怎么……",
+        "structure": "それほど + 否定形",
+        "explanation": "表示程度并没有讲的那么深或达到预期的程度。",
+        "example": {
+          "sentence": "<ruby>近<rt>ちか</rt></ruby>ごろそれほど<ruby>忙<rt>いそが</rt></ruby>しくありません。",
+          "translation": "最近不怎么忙。"
+        }
+      }
+    ],
+    "id": "a6215228-8b0c-456b-8cb4-3da4a8dfc50e"
+  },
+  {
+    "lesson": "第15课",
+    "grammar_point": "接续助词「と」",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示假定、确定或恒常条件",
+        "structure": "用言/助动词终止形 + と",
+        "explanation": "表示“一旦……就……”。常用于自然规律、重复性习惯或必然结果。后项不能接命令、意志内容。",
+        "example": {
+          "sentence": "<ruby>長<rt>なが</rt></ruby>く<ruby>煮<rt>に</rt></ruby>ると<ruby>固<rt>かた</rt></ruby>くなります。",
+          "translation": "煮久了就会变硬。"
+        }
+      }
+    ],
+    "id": "3759336b-7e1c-47dc-80c3-f1802bbd7674"
+  },
+  {
+    "lesson": "第15课",
+    "grammar_point": "･･･かどうか",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "是否……",
+        "structure": "简体句（体言/用言终止形）+ かどうか",
+        "explanation": "用于将包含“是或否”的疑问句嵌入长句中作宾语或主语。",
+        "example": {
+          "sentence": "<ruby>間違<rt>ま</rt></ruby>いがあるかどうか<ruby>見<rt>み</rt></ruby>てくださいませんか。",
+          "translation": "请帮我看看有没有错误。"
+        }
+      }
+    ],
+    "id": "c9311bf9-6bf1-4e33-82ee-5d22afed0082"
+  },
+  {
+    "lesson": "第15课",
+    "grammar_point": "动词的简体",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "非礼貌体（用于文章或亲密关系）",
+        "structure": "动词原形、ない形、た形等",
+        "explanation": "相对于敬体（ます形），简体用于文章、家庭内部、好友间或上级对下级的谈话。",
+        "example": {
+          "sentence": "<ruby>来週<rt>らいしゅう</rt></ruby>、<ruby>大学祭<rt>だいがくさい</rt></ruby>があるだろう。",
+          "translation": "下周有大学祭吧。"
+        }
+      }
+    ],
+    "id": "fac4f3e3-5356-4237-b138-2e673eefbc3e"
+  },
+  {
+    "lesson": "第16课",
+    "grammar_point": "･･･のは･･･からです",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示“之所以……是因为……”",
+        "structure": "句子简体形 + のは + 句子简体形 + からです",
+        "explanation": "这是先讲结果，后讲原因、理由的表达方式。可以用于强调原因。",
+        "example": {
+          "sentence": "きょう会社を<ruby>休<rt>やす</rt></ruby>んだのは<ruby>病気<rt>びょうき</rt></ruby>になったからです。",
+          "translation": "今天之所以没去公司上班是因为生病了。"
+        }
+      }
+    ],
+    "id": "075d2ba5-b598-4e7a-92c3-d519ae4809e4"
+  },
+  {
+    "lesson": "第16课",
+    "grammar_point": "体言 + について",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示“关于……”、“就……”",
+        "structure": "体言 + について",
+        "explanation": "在句中作状语。若后续“の”可作定语，也可接“は”“も”等提示助词。",
+        "example": {
+          "sentence": "<ruby>今日<rt>きょう</rt></ruby>は<ruby>公害<rt>こうがい</rt></ruby>について<ruby>話<rt>はな</rt></ruby>したいです。",
+          "translation": "今天我想就公害问题谈一谈。"
+        }
+      }
+    ],
+    "id": "6eda047e-dbf9-490b-886a-337f04e6ccbe"
+  },
+  {
+    "lesson": "第16课",
+    "grammar_point": "･･･ことがあります",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示“有时会……”",
+        "structure": "动词连体形(现在时) + ことがあります",
+        "explanation": "表示有时会有某种行为或情况发生。注意不能用于频繁发生的事情。",
+        "example": {
+          "sentence": "<ruby>友達<rt>ともだち</rt></ruby>の<ruby>家<rt>いえ</rt></ruby>で<ruby>食事<rt>しょくじ</rt></ruby>をすることはありますが、<ruby>泊<rt>と</rt></ruby>まることはありません。",
+          "translation": "有时会在朋友家吃饭，但是不会在那里过夜。"
+        }
+      }
+    ],
+    "id": "c6e4288d-017f-4567-872b-18bb437e46a2"
+  },
+  {
+    "lesson": "第16课",
+    "grammar_point": "･･･たり、･･･たりします／です",
+    "importance": 10,
+    "usages": [
+      {
+        "meaning": "动作的列举或反复",
+        "structure": "动词连用形 + たり、动词连用形 + たりする",
+        "explanation": "表示两个以上动作的反复进行，或者从许多动作中举出若干例子。",
+        "example": {
+          "sentence": "<ruby>昨日<rt>きのう</rt></ruby><ruby>公園<rt>こうえん</rt></ruby>へ<ruby>行<rt>い</rt></ruby>きました。<ruby>公園<rt>こうえん</rt></ruby>で<ruby>写真<rt>しゃしん</rt></ruby>を<ruby>撮<rt>と</rt></ruby>ったり、<ruby>散歩<rt>さんぽ</rt></ruby>したりしてとても<ruby>楽<rt>たの</rt></ruby>しかったですよ。",
+          "translation": "昨天去了公园。在公园里拍拍照，散散步，过得很愉快。"
+        }
+      },
+      {
+        "meaning": "状态的反复或交替",
+        "structure": "形容词连用形（かっ）+ たり、形容词连用形（かっ）+ たりです",
+        "explanation": "表示两个以上状态的反复或交替出现。",
+        "example": {
+          "sentence": "このごろ<ruby>天気<rt>てんき</rt></ruby>はよかったり、<ruby>悪<rt>わる</rt></ruby>かったりです。",
+          "translation": "这些日子天气时好时坏。"
+        }
+      },
+      {
+        "meaning": "体言或形容动词的列举",
+        "structure": "体言/形容动词语干 + だったり + だったりする",
+        "explanation": "用于名词或形容动词的并列。",
+        "example": {
+          "sentence": "この<ruby>辺<rt>あた</rt></ruby>りは<ruby>静<rt>しず</rt></ruby>かだったり、にぎやかだったりです。",
+          "translation": "这一带有时宁静，有时热闹。"
+        }
+      }
+    ],
+    "id": "afb8a0e3-77ca-4b50-baf5-953a159d01c2"
+  },
+  {
+    "lesson": "第16课",
+    "grammar_point": "体言 + にとって",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示“对于……来说”",
+        "structure": "体言 + にとって",
+        "explanation": "表示评价或判断的基准。前面的名词多为人或单位。",
+        "example": {
+          "sentence": "これはわたしにとって<ruby>大切<rt>たいせつ</rt></ruby>なものです。",
+          "translation": "这东西对我来说很重要。"
+        }
+      }
+    ],
+    "id": "3190e3b1-0520-4cad-8677-effd850f8e48"
+  },
+  {
+    "lesson": "第16课",
+    "grammar_point": "･･･前に / ･･･後で",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "表示“在……之前”",
+        "structure": "动词连体形现在式 + 前に",
+        "explanation": "表示在某个动作发生之前进行另一动作。",
+        "example": {
+          "sentence": "<ruby>料理<rt>りょうり</rt></ruby>を<ruby>作<rt>つく</rt></ruby>る<ruby>前<rt>まえ</rt></ruby>に<ruby>手<rt>て</rt></ruby>を<ruby>洗<rt>あら</rt></ruby>います。",
+          "translation": "在做饭前先洗手。"
+        }
+      },
+      {
+        "meaning": "表示“在……之后”",
+        "structure": "动词连体形过去式（た形） + あとで",
+        "explanation": "表示在某个动作完成之后进行另一动作。",
+        "example": {
+          "sentence": "ご<ruby>飯<rt>はん</rt></ruby>を<ruby>食<rt>た</rt></ruby>べたあとで<ruby>勉強<rt>べんきょう</rt></ruby>します。",
+          "translation": "吃饭后学习。"
+        }
+      }
+    ],
+    "id": "aecdd3c7-7e4e-49d8-869e-b00ee9452e9a"
+  },
+  {
+    "lesson": "第16课",
+    "grammar_point": "ぜんぜん･･･(否定)",
+    "importance": 8,
+    "usages": [
+      {
+        "meaning": "表示“一点儿也不……”、“完全不……”",
+        "structure": "ぜんぜん + 否定词",
+        "explanation": "副词“ぜんぜん”后续否定意义的谓语，表示强烈的否定。",
+        "example": {
+          "sentence": "<ruby>私<rt>わたし</rt></ruby>はそのことについて<ruby>ぜんぜん興味<rt>きょうみ</rt></ruby>がありません。",
+          "translation": "对那件事，我一点儿兴趣也没有。"
+        }
+      }
+    ],
+    "id": "7ffb6537-d970-4891-89b4-c7c867bd0cfb"
+  },
+  {
+    "lesson": "第16课",
+    "grammar_point": "接续助词「し」",
+    "importance": 9,
+    "usages": [
+      {
+        "meaning": "列举原因、理由",
+        "structure": "句子简体形 + し",
+        "explanation": "可以并列两个以上事实作为后项的原因，也可以暗示其他理由的存在。",
+        "example": {
+          "sentence": "<ruby>朝<rt>あさ</rt></ruby>は<ruby>早<rt>はや</rt></ruby>いし、<ruby>夜<rt>よる</rt></ruby>は<ruby>遅<rt>おそ</rt></ruby>くまで<ruby>残業<rt>ざんぎょう</rt></ruby>をするし、サラリーマンの<ruby>仕事<rt>しごと</rt></ruby>はたいへんです。",
+          "translation": "早上起得早，晚上又要加班到很晚，工薪阶层的工作真够受的。"
+        }
+      }
+    ],
+    "id": "538f4f39-730e-4b70-aa1f-7040d04663c1"
+  },
+  {
+    "lesson": "第16课",
+    "grammar_point": "格助词「で」(限度)",
+    "importance": 7,
+    "usages": [
+      {
+        "meaning": "表示时间、空间、数量、价值等的限度",
+        "structure": "体言 + で",
+        "explanation": "表示在某个范围或数量之内结束或成立。",
+        "example": {
+          "sentence": "<ruby>夏休<rt>なつやす</rt></ruby>みはあしたで<ruby>終<rt>お</rt></ruby>わります。",
+          "translation": "暑假明天就结束了。"
+        }
+      }
+    ],
+    "id": "5e501a79-ef1f-4e22-8818-f147abd5dc46"
+  }
+]`;
+
+        // ========== APP STATE ==========
+        let grammarData = [];
+        let masteredItems = {};
+        const STORAGE_KEY = 'grammar_mastered';
+
+        // ========== INITIALIZATION ==========
+        function init() {
+            // Parse grammar data
+            try {
+                grammarData = JSON.parse(GRAMMAR_DATA_JSON);
+                // Add IDs if missing
+                grammarData.forEach((item, index) => {
+                    if (!item.id) {
+                        item.id = `grammar_${index}_${Date.now()}`;
+                    }
+                });
+            } catch (e) {
+                console.error('Failed to parse grammar data:', e);
+                grammarData = [];
+            }
+
+            // Load mastered state from localStorage
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    masteredItems = JSON.parse(saved);
+                } catch (e) {
+                    masteredItems = {};
+                }
+            }
+
+            // Populate lesson filter
+            populateLessonFilter();
+
+            // Bind events
+            document.getElementById('sortBy').addEventListener('change', renderList);
+            document.getElementById('filterLesson').addEventListener('change', renderList);
+            document.getElementById('showMastered').addEventListener('change', renderList);
+            document.getElementById('exportPdf').addEventListener('click', exportToPdf);
+
+            // Initial render
+            renderList();
+        }
+
+        function populateLessonFilter() {
+            const lessons = [...new Set(grammarData.map(g => g.lesson))].sort((a, b) => {
+                const numA = parseInt(a.match(/\d+/)?.[0] || 0);
+                const numB = parseInt(b.match(/\d+/)?.[0] || 0);
+                return numA - numB;
+            });
+            const select = document.getElementById('filterLesson');
+            lessons.forEach(lesson => {
+                const opt = document.createElement('option');
+                opt.value = lesson;
+                opt.textContent = lesson;
+                opt.className = 'text-gray-800';
+                select.appendChild(opt);
+            });
+        }
+
+        // ========== RENDERING ==========
+        function renderList() {
+            const sortBy = document.getElementById('sortBy').value;
+            const filterLesson = document.getElementById('filterLesson').value;
+            const showMastered = document.getElementById('showMastered').checked;
+
+            let filtered = [...grammarData];
+
+            // Filter by lesson
+            if (filterLesson !== 'all') {
+                filtered = filtered.filter(g => g.lesson === filterLesson);
+            }
+
+            // Filter by mastered
+            if (!showMastered) {
+                filtered = filtered.filter(g => !masteredItems[g.id]);
+            }
+
+            // Sort
+            if (sortBy === 'importance') {
+                filtered.sort((a, b) => b.importance - a.importance);
+            } else {
+                filtered.sort((a, b) => {
+                    const numA = parseInt(a.lesson.match(/\d+/)?.[0] || 0);
+                    const numB = parseInt(b.lesson.match(/\d+/)?.[0] || 0);
+                    return numA - numB;
+                });
+            }
+
+            const container = document.getElementById('grammarList');
+            const emptyState = document.getElementById('emptyState');
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                container.innerHTML = filtered.map(g => renderCard(g)).join('');
+                // Bind mastered checkboxes
+                container.querySelectorAll('.mastered-checkbox').forEach(cb => {
+                    cb.addEventListener('change', (e) => {
+                        const id = e.target.dataset.id;
+                        masteredItems[id] = e.target.checked;
+                        saveMastered();
+                        updateStats();
+                        // Update card style
+                        const card = e.target.closest('.grammar-card');
+                        if (e.target.checked) {
+                            card.classList.add('mastered');
+                        } else {
+                            card.classList.remove('mastered');
+                        }
+                    });
+                });
+            }
+
+            updateStats();
+        }
+
+        function renderCard(grammar) {
+            const isMastered = masteredItems[grammar.id] || false;
+            const importanceClass = grammar.importance >= 8 ? 'importance-high' :
+                grammar.importance >= 5 ? 'importance-medium' : 'importance-low';
+
+            const usagesHtml = grammar.usages.map(usage => `
+                <div class="mt-3 p-3 bg-gray-50 rounded-lg">
+                    <div class="flex items-start gap-2 mb-2">
+                        <span class="text-indigo-600 font-medium">${usage.structure}</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mb-2">${usage.meaning}</p>
+                    ${usage.explanation ? `<p class="text-gray-500 text-xs mb-2">${usage.explanation}</p>` : ''}
+                    <div class="bg-white p-2 rounded border-l-4 border-indigo-300">
+                        <p class="text-gray-800">${usage.example.sentence}</p>
+                        <p class="text-gray-500 text-sm mt-1">${usage.example.translation}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="grammar-card bg-white rounded-xl shadow-md p-5 ${isMastered ? 'mastered' : ''}" data-id="${grammar.id}">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <span class="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700">${grammar.lesson}</span>
+                            <span class="text-xs px-2 py-1 rounded text-white ml-1 ${importanceClass}">重要度 ${grammar.importance}</span>
+                        </div>
+                        <label class="flex items-center gap-1 cursor-pointer">
+                            <input type="checkbox" class="mastered-checkbox w-5 h-5 rounded text-green-500 focus:ring-green-500" data-id="${grammar.id}" ${isMastered ? 'checked' : ''}>
+                            <span class="text-xs text-gray-500">已掌握</span>
+                        </label>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">${grammar.grammar_point}</h3>
+                    ${usagesHtml}
+                </div>
+            `;
+        }
+
+        function updateStats() {
+            const total = grammarData.length;
+            const mastered = Object.values(masteredItems).filter(v => v).length;
+            const percent = total > 0 ? Math.round((mastered / total) * 100) : 0;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('masteredCount').textContent = mastered;
+            document.getElementById('progressPercent').textContent = percent + '%';
+        }
+
+        function saveMastered() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(masteredItems));
+        }
+
+        // ========== PDF EXPORT ==========
+        async function exportToPdf() {
+            const { jsPDF } = window.jspdf;
+
+            // Show loading state
+            const exportBtn = document.getElementById('exportPdf');
+            const originalText = exportBtn.innerHTML;
+            exportBtn.innerHTML = '正在生成...';
+            exportBtn.disabled = true;
+
+            try {
+                // Create a temporary container for PDF content
+                const pdfContent = document.createElement('div');
+                pdfContent.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 800px; background: white; padding: 20px; font-family: sans-serif;';
+
+                // Build content HTML
+                let contentHtml = `
+                    <h1 style="text-align: center; font-size: 24px; margin-bottom: 10px;">日语语法学习记录</h1>
+                    <p style="text-align: center; color: #666; margin-bottom: 20px;">导出时间: ${new Date().toLocaleString()}</p>
+                    <hr style="margin-bottom: 20px;">
+                `;
+
+                grammarData.forEach((g) => {
+                    const isMastered = masteredItems[g.id] ? '✓ 已掌握' : '○ 未掌握';
+                    contentHtml += `
+                        <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;">
+                                <span style="background: #6366f1; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${g.lesson}</span>
+                                <span style="background: ${g.importance >= 8 ? '#ef4444' : g.importance >= 5 ? '#f59e0b' : '#10b981'}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">重要度 ${g.importance}</span>
+                                <span style="color: ${masteredItems[g.id] ? '#16a34a' : '#9ca3af'}; font-size: 12px;">${isMastered}</span>
+                            </div>
+                            <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">${g.grammar_point}</h3>
+                    `;
+
+                    g.usages.forEach(usage => {
+                        const cleanSentence = usage.example.sentence.replace(/<ruby>([^<]+)<rt>[^<]+<\/rt><\/ruby>/g, '$1');
+                        contentHtml += `
+                            <div style="background: #f9fafb; padding: 8px; border-radius: 4px; margin-bottom: 6px;">
+                                <p style="color: #4f46e5; font-size: 13px; margin-bottom: 4px;">${usage.structure}</p>
+                                <p style="color: #374151; font-size: 12px; margin-bottom: 4px;">${usage.meaning}</p>
+                                <p style="font-size: 13px; margin-bottom: 2px;">${cleanSentence}</p>
+                                <p style="color: #6b7280; font-size: 12px;">${usage.example.translation}</p>
+                            </div>
+                        `;
+                    });
+
+                    contentHtml += '</div>';
+                });
+
+                pdfContent.innerHTML = contentHtml;
+                document.body.appendChild(pdfContent);
+
+                // Capture as canvas
+                const canvas = await html2canvas(pdfContent, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                });
+
+                document.body.removeChild(pdfContent);
+
+                // Create PDF from canvas
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 297; // A4 height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                doc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                doc.save('grammar_export.pdf');
+            } catch (error) {
+                console.error('PDF Export Error:', error);
+                alert('PDF导出失败: ' + error.message);
+            } finally {
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            }
+        }
+
+        // ========== START ==========
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
